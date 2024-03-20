@@ -9,7 +9,7 @@ import java.util.Map;
 public interface FeatureList {
 
     static Map<String, FeatureInterface> getFeatures() {
-        return Map.of("TRC", new TRCFeature(),
+        return Map.of("TRCMgmt", new TRCFeature(),
                 "Stolen", new StolenFeature(),
                 "Recovery", new RecoveryFeature()
         );

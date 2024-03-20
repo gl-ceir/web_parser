@@ -8,10 +8,17 @@ public class TRCFeature implements FeatureInterface {
     public void executeInit(WebActionDb wb) {
         System.out.println("This is trc init flow");
 
+        // file REe
+
+        if(wb.getSubFeature() == "TAData")
+          // ApproveTrcSubFeature
+           // else
+
+
     }
     @Override
     public void executeProcess(WebActionDb wb) {
+         // Mark Done
         System.out.println("This is trc init flow");
-
     }
 }

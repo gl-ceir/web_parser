@@ -22,9 +22,11 @@ public class MainController {
     private final Logger logger = LogManager.getLogger(MainController.class);
 
     public void startProcess(ApplicationContext context) {
-        var wb = new WebActionDb();  //getWebAction Details
-        wb.setFeature("Stolen");
-        wb.setState(10);
+        var wb = new WebActionDb();  //getWebAction Details // 1:
+        wb.setFeature("TRCMgmt");
+        wb.setState(0);
+
+
         String state = wb.getState() == 0 ? "init" : "";
 
         System.out.println("********** Process Started ********");
