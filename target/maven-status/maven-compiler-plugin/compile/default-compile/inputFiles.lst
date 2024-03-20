@@ -1,0 +1,9 @@
+/home/sachin/Glocks/projects/web_parser/src/main/java/com/glocks/web_parser/service/parser/Recovery/RecoveryFeature.java
+/home/sachin/Glocks/projects/web_parser/src/main/java/com/glocks/web_parser/service/parser/TRC/TRCFeature.java
+/home/sachin/Glocks/projects/web_parser/src/main/java/com/glocks/web_parser/service/parser/Stolen/StolenFeature.java
+/home/sachin/Glocks/projects/web_parser/src/main/java/com/glocks/web_parser/WebParserApplication.java
+/home/sachin/Glocks/projects/web_parser/src/main/java/com/glocks/web_parser/model/app/WebActionDb.java
+/home/sachin/Glocks/projects/web_parser/src/main/java/com/glocks/web_parser/controller/MainController.java
+/home/sachin/Glocks/projects/web_parser/src/main/java/com/glocks/web_parser/service/parser/FeatureList.java
+/home/sachin/Glocks/projects/web_parser/src/main/java/com/glocks/web_parser/service/parser/FeatureInterface.java
+/home/sachin/Glocks/projects/web_parser/src/main/java/com/glocks/web_parser/service/parser/FeatureFactory.java

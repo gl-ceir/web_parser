@@ -1,0 +1,9 @@
+com/glocks/web_parser/service/parser/Stolen/StolenFeature.class
+com/glocks/web_parser/model/app/WebActionDb.class
+com/glocks/web_parser/service/parser/Recovery/RecoveryFeature.class
+com/glocks/web_parser/service/parser/FeatureFactory.class
+com/glocks/web_parser/controller/MainController.class
+com/glocks/web_parser/WebParserApplication.class
+com/glocks/web_parser/service/parser/FeatureInterface.class
+com/glocks/web_parser/service/parser/FeatureList.class
+com/glocks/web_parser/service/parser/TRC/TRCFeature.class
