@@ -13,4 +13,9 @@ public class RecoveryFeature implements FeatureInterface {
         System.out.println("This is Recovery process flow");
 
     }
+
+    @Override
+    public void validateProcess(WebActionDb wb) {
+
+    }
 }

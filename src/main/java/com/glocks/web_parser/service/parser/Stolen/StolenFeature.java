@@ -14,4 +14,9 @@ public class StolenFeature implements FeatureInterface {
         System.out.println("This is stolen process flow");
 
     }
+
+    @Override
+    public void validateProcess(WebActionDb wb) {
+
+    }
 }
