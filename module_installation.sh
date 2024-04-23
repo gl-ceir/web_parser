@@ -1,4 +1,4 @@
-#!/bin/bash
+  #!/bin/bash
 
 # script for first time installation of hlr deactivation module.
 

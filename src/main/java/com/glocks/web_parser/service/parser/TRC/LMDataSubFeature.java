@@ -1,7 +1,6 @@
 package com.glocks.web_parser.service.parser.TRC;
 
 
-import com.gl.Rule_engine_Old.RuleEngineApplication;
 import com.glocks.web_parser.alert.AlertService;
 import com.glocks.web_parser.config.AppConfig;
 import com.glocks.web_parser.config.AppDbConfig;
@@ -12,6 +11,7 @@ import com.glocks.web_parser.model.app.TrcDataMgmt;
 import com.glocks.web_parser.model.app.TrcLocalManufacturedDevice;
 import com.glocks.web_parser.model.app.WebActionDb;
 import com.glocks.web_parser.repository.app.*;
+import com.glocks.web_parser.service.fileOperations.FileOperations;
 import com.glocks.web_parser.service.rule.Rules;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,10 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.nio.Buffer;
 import java.sql.Connection;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -167,7 +165,7 @@ public class LMDataSubFeature {
         ) {
             Connection conn = appDbConfig.springDataSource().getConnection();
             String record = null;
-            outFile.println(reader.readLine());
+            outFile.println(reader.readLine()+",Status,Reason");
             try {
                 while((record = reader.readLine()) != null) {
                     if(record.isEmpty()) continue;
@@ -267,7 +265,6 @@ public class LMDataSubFeature {
                         logger.error("Exception occurred while inserting in DB for local manufacture {} with error {}",
                                 lmRecord, e.getMessage());
                     }
-
                 }
 
             }

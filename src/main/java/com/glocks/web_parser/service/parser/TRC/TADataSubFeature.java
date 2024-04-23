@@ -11,6 +11,7 @@ import com.glocks.web_parser.model.app.WebActionDb;
 import com.glocks.web_parser.repository.app.TrcDataMgmtRepository;
 import com.glocks.web_parser.repository.app.TrcTypeApprovedDataRepository;
 import com.glocks.web_parser.repository.app.WebActionDbRepository;
+import com.glocks.web_parser.service.fileOperations.FileOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -128,7 +129,7 @@ public class TADataSubFeature {
 //            fileOperations.moveFile(currentFileName, currentFileName, appConfig.getTaBaseFilePath() + "/" +
 //                    transactionId, appConfig.getTaProcessedBaseFilePath() + "/" + transactionId);
             // all done updating the entry to 3 in web action db and calling process file functions
-            webActionDbRepository.updateWebActionStatus(webActionDb.getState(), webActionDb.getId());
+            webActionDbRepository.updateWebActionStatus(3, webActionDb.getId());
             executeProcess(webActionDb);
 
 

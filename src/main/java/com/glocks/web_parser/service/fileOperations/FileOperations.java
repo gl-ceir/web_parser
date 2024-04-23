@@ -1,4 +1,4 @@
-package com.glocks.web_parser.service.parser.TRC;
+package com.glocks.web_parser.service.fileOperations;
 
 import com.glocks.web_parser.dto.FileDto;
 import org.slf4j.Logger;
@@ -12,7 +12,7 @@ import java.nio.file.Paths;
 
 @Service
 public class FileOperations implements IFileOperations{
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+        private final Logger logger = LoggerFactory.getLogger(this.getClass());
     @Override
     public boolean checkFileExists(String fileName) {
         File file = new File(fileName);
@@ -26,6 +26,16 @@ public class FileOperations implements IFileOperations{
             logger.info("Moved File:{} from {} to {}", file, path, newPath);
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public boolean createDirectory(String filePath){
+        try {
+            Files.createDirectories(Paths.get(filePath));
+            return true;
+        } catch (Exception ex) {
+            logger.error("Error in creating directory {}", filePath);
+            return false;
         }
     }
     

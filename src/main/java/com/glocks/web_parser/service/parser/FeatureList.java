@@ -1,5 +1,6 @@
 package com.glocks.web_parser.service.parser;
 
+import com.glocks.web_parser.service.parser.ListMgmt.ListMgmtFeature;
 import com.glocks.web_parser.service.parser.Recovery.RecoveryFeature;
 import com.glocks.web_parser.service.parser.Stolen.StolenFeature;
 import com.glocks.web_parser.service.parser.TRC.TRCFeature;
@@ -13,10 +14,12 @@ public class FeatureList {
 
     @Autowired
     TRCFeature trcFeature;
+    @Autowired
+    ListMgmtFeature listMgmtFeature;
 
     public Map<String, FeatureInterface> getFeatures() {
         return Map.of("TRCManagement", trcFeature,
-                "Stolen", new StolenFeature(),
+                "ListManagement", listMgmtFeature,
                 "Recovery", new RecoveryFeature()
         );
     }

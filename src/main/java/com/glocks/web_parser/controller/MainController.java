@@ -5,6 +5,7 @@ import com.glocks.web_parser.model.app.WebActionDb;
 import com.glocks.web_parser.repository.app.WebActionDbRepository;
 import com.glocks.web_parser.service.parser.FeatureInterface;
 import com.glocks.web_parser.service.parser.FeatureList;
+import com.glocks.web_parser.service.parser.ListMgmt.ListMgmtFeature;
 import com.glocks.web_parser.service.parser.TRC.TRCFeature;
 import lombok.Synchronized;
 import org.apache.logging.log4j.LogManager;
@@ -31,6 +32,8 @@ public class MainController {
 
     @Autowired
     TRCFeature trcFeature;
+    @Autowired
+    ListMgmtFeature listMgmtFeature;
 
     @Autowired
     FeatureList featureList;

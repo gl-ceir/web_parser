@@ -12,8 +12,7 @@ public class AppConfig {
 
     @Value("${ta.base.file.path}")
     String taBaseFilePath;
-//    @Value("${ta.processed.base.file.path}")
-//    String taProcessedBaseFilePath;
+
 
     @Value("${alert.url}")
     String alertUrl;
@@ -23,18 +22,20 @@ public class AppConfig {
 
     @Value("${qa.base.file.path}")
     String qaBaseFilePath;
-//    @Value("${qa.processed.base.file.path}")
-//    String qaProcessedBaseFilePath;
+
     @Value("${trc.qa.file.separator}")
     String trcQaFileSeparator;
 
     @Value("${local.manufacturer.base.file.path}")
     String localManufacturerBaseFilePath;
 
-//    @Value("${local.manufacturer.processed.base.file.path}")
-//    String localManufacturerProcessedBaseFilePath;
-
     @Value("${trc.local.manufacturer.file.separator}")
     String trcLocalManufacturerFileSeparator;
+
+    @Value("${list.mgmt.file.path}")
+    String listMgmtFilePath;
+
+    @Value("${list.mgmt.file.separator}")
+    String listMgmtFileSeparator;
 
 }

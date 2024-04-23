@@ -9,4 +9,6 @@ public class Constants {
     public static String dateFormat = "yyyyMMdd";
 
     public static SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
+
+    public static String listMgmtSingleRequestMode = "SINGLE";
 }

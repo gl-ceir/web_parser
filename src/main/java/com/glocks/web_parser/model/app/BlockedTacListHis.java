@@ -1,5 +1,6 @@
 package com.glocks.web_parser.model.app;
 
+
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
@@ -7,14 +8,14 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
-@Data
 @Entity
-@Table(name="trc_data_mgmt")
-public class TrcDataMgmt {
+@Data
+@Table(name="blocked_tac_list_his")
+public class BlockedTacListHis {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private int id;
 
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)
@@ -26,21 +27,28 @@ public class TrcDataMgmt {
     @Column(name="modified_on")
     LocalDateTime modifiedOn;
 
-    @Column(name="file_name")
-    String fileName;
+    @Column(name="tac")
+    String tac;
 
-    @Column(name="status")
-    String status;
+    @Column(name="source")
+    String source;
 
-    @Column(name="transaction_id")
-    String transactionId;
+    @Column(name="remarks")
+    String remarks;
 
-    @Column(name="user_id")
-    String userId;
+    @Column(name="mode_type")
+    String modeType;
 
     @Column(name="request_type")
     String requestType;
 
-    @Column(name="remarks")
-    String remarks;
+    @Column(name="txn_id")
+    String txnId;
+
+    @Column(name="user_id")
+    String userId;
+    @Column(name="operation")
+    int operation;
+
+
 }

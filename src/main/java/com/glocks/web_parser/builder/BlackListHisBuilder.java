@@ -1,0 +1,33 @@
+package com.glocks.web_parser.builder;
+
+import com.glocks.web_parser.model.app.BlackList;
+import com.glocks.web_parser.model.app.BlackListHis;
+import lombok.Builder;
+import org.springframework.stereotype.Component;
+
+@Component
+@Builder
+public class BlackListHisBuilder {
+
+    public static BlackListHis forInsert(BlackList blackList, int operation) {
+        BlackListHis blackListHis = new BlackListHis();
+        blackListHis.setImei(blackList.getImei());
+        blackListHis.setImsi(blackList.getImsi());
+        blackListHis.setMsisdn(blackList.getMsisdn());
+        blackListHis.setOperation(operation);
+        blackListHis.setRemarks(blackList.getRemarks());
+        blackListHis.setActualImei(blackList.getActualImei());
+//
+        blackListHis.setModeType(blackList.getModeType());
+        blackListHis.setOperatorName(blackList.getOperatorName());
+
+        blackListHis.setRequestType(blackList.getRequestType());
+        blackListHis.setTxnId(blackList.getTxnId());
+        blackListHis.setUserId(blackList.getUserId());
+
+        blackListHis.setTac(blackList.getTac());
+        blackListHis.setSource(blackList.getSource());
+        return blackListHis;
+    }
+}
+

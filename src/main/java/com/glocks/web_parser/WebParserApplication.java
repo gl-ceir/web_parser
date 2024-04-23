@@ -1,8 +1,6 @@
 package com.glocks.web_parser;
 
 import com.glocks.web_parser.controller.MainController;
-import com.glocks.web_parser.service.parser.TRC.FileOperations;
-import com.sun.tools.javac.Main;
 import com.ulisesbocchio.jasyptspringboot.annotation.EnableEncryptableProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;

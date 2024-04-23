@@ -11,6 +11,7 @@ import com.glocks.web_parser.model.app.WebActionDb;
 import com.glocks.web_parser.repository.app.TrcDataMgmtRepository;
 import com.glocks.web_parser.repository.app.TrcQualifiedAgentsDataRepository;
 import com.glocks.web_parser.repository.app.WebActionDbRepository;
+import com.glocks.web_parser.service.fileOperations.FileOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -132,7 +133,7 @@ public class QADataSubFeature {
 //            fileOperations.moveFile(currentFileName, currentFileName, appConfig.getQaBaseFilePath() + "/" +
 //                    transactionId, appConfig.getQaProcessedBaseFilePath() + "/" + transactionId);
             // all done updating the entry to 3 in web action db and calling process file functions
-            webActionDbRepository.updateWebActionStatus(webActionDb.getState(), webActionDb.getId());
+            webActionDbRepository.updateWebActionStatus(3, webActionDb.getId());
             executeProcess(webActionDb);
 
 
