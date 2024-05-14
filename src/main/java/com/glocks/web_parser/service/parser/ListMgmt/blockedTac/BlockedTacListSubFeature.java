@@ -21,7 +21,7 @@ public class BlockedTacListSubFeature {
     @Autowired
     BlockedTacBulkAdd blockedTacBulkAdd;
     @Autowired
-    BlockedTacSingleDel exceptionBulkDel;
+    BlockedTacBulkDel blockedTacBulkDel;
 
     public void delegateInitRequest(WebActionDb webActionDb, ListDataMgmt listDataMgmt) {
 
@@ -51,7 +51,7 @@ public class BlockedTacListSubFeature {
 
         }
         else if(requestType.equalsIgnoreCase(listMgmtBulkRequestMode) && action.equalsIgnoreCase(listMgmtActionDel)) {
-            return exceptionBulkDel;
+            return blockedTacBulkDel;
         }
         else return null;
     }

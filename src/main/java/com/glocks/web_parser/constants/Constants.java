@@ -10,5 +10,5 @@ public class Constants {
 
     public static SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
 
-    public static String listMgmtSingleRequestMode = "SINGLE";
+    public static String applicationName = "Web Parser";
 }

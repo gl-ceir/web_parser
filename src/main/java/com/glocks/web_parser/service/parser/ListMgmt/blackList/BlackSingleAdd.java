@@ -1,9 +1,14 @@
 package com.glocks.web_parser.service.parser.ListMgmt.blackList;
 
 import com.glocks.web_parser.config.AppConfig;
+import com.glocks.web_parser.config.DbConfigService;
+import com.glocks.web_parser.constants.FileType;
+import com.glocks.web_parser.constants.ListType;
 import com.glocks.web_parser.model.app.ListDataMgmt;
 import com.glocks.web_parser.model.app.WebActionDb;
+import com.glocks.web_parser.repository.app.SysParamRepository;
 import com.glocks.web_parser.repository.app.WebActionDbRepository;
+import com.glocks.web_parser.service.fileCopy.ListFileManagementService;
 import com.glocks.web_parser.service.fileOperations.FileOperations;
 import com.glocks.web_parser.service.operatorSeries.OperatorSeriesService;
 import com.glocks.web_parser.service.parser.ListMgmt.CommonFunctions;
@@ -25,7 +30,8 @@ public class BlackSingleAdd implements IRequestTypeAction {
     WebActionDbRepository webActionDbRepository;
     @Autowired
     Validation validation;
-
+    @Autowired
+    ListFileManagementService listFileManagementService;
     @Autowired
     AppConfig appConfig;
     @Autowired
@@ -34,11 +40,15 @@ public class BlackSingleAdd implements IRequestTypeAction {
     OperatorSeriesService operatorSeriesService;
     @Autowired
     CommonFunctions commonFunctions;
+    @Autowired
+    SysParamRepository sysParamRepository;
+    @Autowired
+    DbConfigService dbConfigService;
 
     @Override
     public  void executeInitProcess(WebActionDb webActionDb, ListDataMgmt listDataMgmt) {
         logger.info("Starting the init process for black list, for request {} and action {}",
-                listDataMgmt.getRequestType(), listDataMgmt.getAction());
+                listDataMgmt.getRequestMode(), listDataMgmt.getAction());
 
         webActionDbRepository.updateWebActionStatus(2, webActionDb.getId());
         executeValidateProcess(webActionDb, listDataMgmt);
@@ -48,8 +58,9 @@ public class BlackSingleAdd implements IRequestTypeAction {
     @Override
     public void executeValidateProcess(WebActionDb webActionDb, ListDataMgmt listDataMgmt) {
         logger.info("Starting the validate process for black list, for request {} and action {}",
-                listDataMgmt.getRequestType(), listDataMgmt.getAction());
-
+                listDataMgmt.getRequestMode(), listDataMgmt.getAction());
+        String imsiPrefixValue = sysParamRepository.getValueFromTag("imsiPrefix");
+        String msisdnPrefixValue = sysParamRepository.getValueFromTag("msisdnPrefix");
         // single and add
         try {
             String imsi = listDataMgmt.getImsi();
@@ -57,18 +68,22 @@ public class BlackSingleAdd implements IRequestTypeAction {
             String msisdn = listDataMgmt.getMsisdn();
             fileOperations.createDirectory(appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/");
             // check all should be null or empty
-            String validateOutput = commonFunctions.validateEntry(imsi, imei, msisdn);
+            String validateOutput = commonFunctions.validateEntry(imsi, imei, msisdn, msisdnPrefixValue.split(",", -1),
+                    imsiPrefixValue.split(",", -1));
 
             if (validateOutput.equalsIgnoreCase("")) {
                 logger.info("The entry is valid, it will be processed");
             } else {
-                File outFile = new File(appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/" + listDataMgmt.getTransactionId() + ".txt");
+                File outFile = new File(appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/" + listDataMgmt.getTransactionId() + ".csv");
                 PrintWriter writer = new PrintWriter(outFile);
                 logger.info("The entry failed the validation, with reason {}", validateOutput);
                 writer.println("MSISDN,IMSI,IMEI,Reason"); // print header in file
-                writer.println(msisdn + "," + imsi + "," + imei + "," + validateOutput);
+                writer.println((msisdn == null ? "":msisdn) + "," + (imsi==null? "":imsi) + "," + (imei==null?"":imei) + "," + dbConfigService.getValue(validateOutput));
                 commonFunctions.updateFailStatus(webActionDb, listDataMgmt);
                 writer.close();
+                listFileManagementService.saveListManagementEntity(listDataMgmt.getTransactionId(), ListType.BLACKLIST, FileType.SINGLE,
+                        appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/",
+                        listDataMgmt.getTransactionId() + ".csv", 1L);
                 return;
             }
             webActionDbRepository.updateWebActionStatus(3, webActionDb.getId());
@@ -82,11 +97,14 @@ public class BlackSingleAdd implements IRequestTypeAction {
     public void executeProcess(WebActionDb webActionDb, ListDataMgmt listDataMgmt) {
         try {
             operatorSeriesService.fillOperatorSeriesHash();
-            File outFile = new File(appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/" + listDataMgmt.getTransactionId()+ ".txt");
+            File outFile = new File(appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/" + listDataMgmt.getTransactionId()+ ".csv");
             PrintWriter writer = new PrintWriter(outFile);
             writer.println("MSISDN,IMSI,IMEI,Reason");
             boolean status = commonFunctions.processBlackSingleAddEntry(listDataMgmt, null, 1, writer);
             writer.close();
+            listFileManagementService.saveListManagementEntity(listDataMgmt.getTransactionId(), ListType.BLACKLIST, FileType.SINGLE,
+                    appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/",
+                    listDataMgmt.getTransactionId() + ".csv", 1L);
             if(status) {
                 commonFunctions.updateSuccessStatus(webActionDb, listDataMgmt);
             } else commonFunctions.updateFailStatus(webActionDb, listDataMgmt);

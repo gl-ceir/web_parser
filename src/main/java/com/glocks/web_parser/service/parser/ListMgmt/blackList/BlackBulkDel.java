@@ -1,12 +1,17 @@
 package com.glocks.web_parser.service.parser.ListMgmt.blackList;
 
+import com.glocks.web_parser.alert.AlertService;
 import com.glocks.web_parser.config.AppConfig;
+import com.glocks.web_parser.config.DbConfigService;
+import com.glocks.web_parser.constants.FileType;
+import com.glocks.web_parser.constants.ListType;
 import com.glocks.web_parser.dto.FileDto;
 import com.glocks.web_parser.dto.ListMgmtDto;
 import com.glocks.web_parser.model.app.ListDataMgmt;
 import com.glocks.web_parser.model.app.WebActionDb;
 import com.glocks.web_parser.repository.app.WebActionDbRepository;
 import com.glocks.web_parser.repository.app.SysParamRepository;
+import com.glocks.web_parser.service.fileCopy.ListFileManagementService;
 import com.glocks.web_parser.service.fileOperations.FileOperations;
 import com.glocks.web_parser.service.operatorSeries.OperatorSeriesService;
 import com.glocks.web_parser.service.parser.ListMgmt.CommonFunctions;
@@ -42,12 +47,18 @@ public class BlackBulkDel implements IRequestTypeAction {
     @Autowired
     SysParamRepository sysParamRepository;
     @Autowired
+    ListFileManagementService listFileManagementService;
+    @Autowired
     CommonFunctions commonFunctions;
+    @Autowired
+    DbConfigService dbConfigService;
+    @Autowired
+    AlertService alertService;
 
     @Override
     public  void executeInitProcess(WebActionDb webActionDb, ListDataMgmt listDataMgmt) {
         logger.info("Starting the init process for black list, for request {} and action {}",
-                listDataMgmt.getRequestType(), listDataMgmt.getAction());
+                listDataMgmt.getRequestMode(), listDataMgmt.getAction());
 
         webActionDbRepository.updateWebActionStatus(2, webActionDb.getId());
         executeValidateProcess(webActionDb, listDataMgmt);
@@ -55,7 +66,7 @@ public class BlackBulkDel implements IRequestTypeAction {
     }
     public void executeValidateProcess(WebActionDb webActionDb, ListDataMgmt listDataMgmt) {
         logger.info("Starting the validate process for black list, for request {} and action {}",
-                listDataMgmt.getRequestType(), listDataMgmt.getAction());
+                listDataMgmt.getRequestMode(), listDataMgmt.getAction());
 
         try {
 
@@ -66,8 +77,9 @@ public class BlackBulkDel implements IRequestTypeAction {
 
             logger.info("File path is {}", filePath);
             if(!fileOperations.checkFileExists(filePath)) {
-                logger.error("File does not exist");
-                commonFunctions.updateFailStatus(webActionDb, listDataMgmt);
+                logger.error("File does not exists {}", filePath);
+                alertService.raiseAnAlert("alert6001", "List Mgmt Black List", currentFileName, 0);
+//                commonFunctions.updateFailStatus(webActionDb, listDataMgmt);
                 return ;
             }
             if(currFile.getTotalRecords() > Integer.parseInt(sysParamRepository.getValueFromTag("LIST_MGMT_FILE_COUNT"))) {
@@ -93,9 +105,11 @@ public class BlackBulkDel implements IRequestTypeAction {
         String currentFileName = listDataMgmt.getFileName();
         String filePath = appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/" + currentFileName;
         FileDto currFile = new FileDto(currentFileName, appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId());
+        String imsiPrefixValue = sysParamRepository.getValueFromTag("imsiPrefix");
+        String msisdnPrefixValue = sysParamRepository.getValueFromTag("msisdnPrefix");
         try {
             operatorSeriesService.fillOperatorSeriesHash();
-            File outFile = new File(appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/" + listDataMgmt.getTransactionId()+ ".txt");
+            File outFile = new File(appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/" + listDataMgmt.getTransactionId()+ ".csv");
             PrintWriter writer = new PrintWriter(outFile);
 
             try(BufferedReader reader = new BufferedReader( new FileReader(filePath))) {
@@ -109,13 +123,14 @@ public class BlackBulkDel implements IRequestTypeAction {
                     }
                     ListMgmtDto listMgmtDto = new ListMgmtDto(record.split(appConfig.getListMgmtFileSeparator(), -1));
                     String validateEntry = commonFunctions.validateEntry(listMgmtDto.getImsi(), listMgmtDto.getImei(),
-                            listMgmtDto.getMsisdn());
+                            listMgmtDto.getMsisdn(), msisdnPrefixValue.split(",", -1),
+                            imsiPrefixValue.split(",", -1));
                     if(validateEntry.equalsIgnoreCase("")) {
                         logger.info("The entry is valid, it will be processed");
                     }
                     else {
                         logger.info("The entry failed the validation, with reason {}", validateEntry);
-                        writer.println(listMgmtDto.getMsisdn()+","+listMgmtDto.getImsi()+","+listMgmtDto.getImei()+","+validateEntry);
+                        writer.println((listMgmtDto.getMsisdn() == null ? "" : listMgmtDto.getMsisdn())+","+(listMgmtDto.getImsi() == null ? "" : listMgmtDto.getImsi())+","+(listMgmtDto.getImei() == null ? "":listMgmtDto.getImei())+","+dbConfigService.getValue(validateEntry));
                         failedCount++;
                         continue;
                     }
@@ -124,6 +139,9 @@ public class BlackBulkDel implements IRequestTypeAction {
                     else failedCount++;
                 }
                 writer.close();
+                listFileManagementService.saveListManagementEntity(listDataMgmt.getTransactionId(), ListType.BLACKLIST, FileType.BULK,
+                        appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/",
+                        listDataMgmt.getTransactionId() + ".csv", currFile.getTotalRecords());
                 currFile.setSuccessRecords(successCount);
                 currFile.setFailedRecords(failedCount);
             } catch (Exception ex) {

@@ -39,7 +39,7 @@ public class AlertService implements IAlert{
                 clientHttpRequestFactory.setConnectTimeout(1000);
                 clientHttpRequestFactory.setReadTimeout(1000);
                 restTemplate = new RestTemplate(clientHttpRequestFactory);
-
+                logger.info(String.valueOf(request.getBody()));
                 ResponseEntity<String> responseEntity = restTemplate.postForEntity(appConfig.getAlertUrl(), request, String.class);
                 logger.info("Alert Sent Request:{}, TimeTaken:{} Response:{}", alertDto, responseEntity, (System.currentTimeMillis() - start));
             } catch (org.springframework.web.client.ResourceAccessException resourceAccessException) {

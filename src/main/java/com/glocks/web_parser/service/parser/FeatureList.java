@@ -1,5 +1,6 @@
 package com.glocks.web_parser.service.parser;
 
+import com.glocks.web_parser.service.parser.BulkIMEI.BulkImeiFeature;
 import com.glocks.web_parser.service.parser.ListMgmt.ListMgmtFeature;
 import com.glocks.web_parser.service.parser.Recovery.RecoveryFeature;
 import com.glocks.web_parser.service.parser.Stolen.StolenFeature;
@@ -16,10 +17,13 @@ public class FeatureList {
     TRCFeature trcFeature;
     @Autowired
     ListMgmtFeature listMgmtFeature;
+    @Autowired
+    BulkImeiFeature bulkImeiFeature;
 
     public Map<String, FeatureInterface> getFeatures() {
         return Map.of("TRCManagement", trcFeature,
                 "ListManagement", listMgmtFeature,
+                "BulkIMEICheck", bulkImeiFeature,
                 "Recovery", new RecoveryFeature()
         );
     }

@@ -12,8 +12,8 @@ public interface WebActionDbRepository extends JpaRepository<WebActionDb, Long>{
 
 
     @Transactional
-    @Query("select u from WebActionDb u where u.state not in (4,5) order by u.state, u.id asc")
-    List<WebActionDb> getListOfPendingTasks();
+    @Query("select u from WebActionDb u where u.state not in (4,5) and u.feature in :feature order by u.state, u.id asc")
+    List<WebActionDb> getListOfPendingTasks(@Param("feature")List<String> feature);
 
     @Transactional
     @Modifying

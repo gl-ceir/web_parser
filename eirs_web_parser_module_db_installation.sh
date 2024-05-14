@@ -177,7 +177,7 @@ insert into rule (description, name, output, state) values ('Checks if tac is ty
 insert into rule (description, name, output, state) values ('Checks if imei present in local manufacturer db or not', 'EXISTS_IN_LOCAL_MANUFACTURER_DB', 'Yes', 'Enabled');
 insert into rule (description, name, output, state) values ('Checks if imei present in national whitelist db or not', 'NATIONAL_WHITELISTS', 'Yes', 'Enabled');
 
-insert into cfg_feature_alert (alert_id, description, feature) values ('alert6001', 'File <process_name> for TRC <e> is not available', 'Web Parser');
+insert into cfg_feature_alert (alert_id, description, feature) values ('alert6001', 'File <process_name> for <e> is not available', 'Web Parser');
 insert into cfg_feature_alert (alert_id, description, feature) values ('alert6002', 'File <process_name > for TRC <e> contains data in invalid format', 'Web Parser');
 insert into cfg_feature_alert (alert_id, description, feature) values ('alert6003', 'Error : <e> for file <process_name>', 'Web Parser');
 

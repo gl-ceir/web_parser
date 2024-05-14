@@ -21,7 +21,7 @@ public class ExceptionListSubFeature {
     @Autowired
     ExceptionBulkAdd exceptionBulkAdd;
     @Autowired
-    ExceptionSingleDel exceptionBulkDel;
+    ExceptionBulkDel exceptionBulkDel;
 
     public void delegateInitRequest(WebActionDb webActionDb, ListDataMgmt listDataMgmt) {
 

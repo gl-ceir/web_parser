@@ -2,6 +2,7 @@ package com.glocks.web_parser.builder;
 
 import com.glocks.web_parser.model.app.BlackList;
 import com.glocks.web_parser.model.app.BlackListHis;
+import com.glocks.web_parser.model.app.ListDataMgmt;
 import lombok.Builder;
 import org.springframework.stereotype.Component;
 
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Builder
 public class BlackListHisBuilder {
 
-    public static BlackListHis forInsert(BlackList blackList, int operation) {
+    public static BlackListHis forInsert(BlackList blackList, int operation, ListDataMgmt listDataMgmt) {
         BlackListHis blackListHis = new BlackListHis();
         blackListHis.setImei(blackList.getImei());
         blackListHis.setImsi(blackList.getImsi());
@@ -22,8 +23,8 @@ public class BlackListHisBuilder {
         blackListHis.setOperatorName(blackList.getOperatorName());
 
         blackListHis.setRequestType(blackList.getRequestType());
-        blackListHis.setTxnId(blackList.getTxnId());
-        blackListHis.setUserId(blackList.getUserId());
+        blackListHis.setTxnId(listDataMgmt.getTransactionId());
+        blackListHis.setUserId(listDataMgmt.getUserId());
 
         blackListHis.setTac(blackList.getTac());
         blackListHis.setSource(blackList.getSource());

@@ -1,6 +1,10 @@
 package com.glocks.web_parser.service.parser.ListMgmt.blockedTac;
 
+import com.glocks.web_parser.alert.AlertService;
 import com.glocks.web_parser.config.AppConfig;
+import com.glocks.web_parser.config.DbConfigService;
+import com.glocks.web_parser.constants.FileType;
+import com.glocks.web_parser.constants.ListType;
 import com.glocks.web_parser.dto.BlockedTacDto;
 import com.glocks.web_parser.dto.FileDto;
 import com.glocks.web_parser.dto.ListMgmtDto;
@@ -8,6 +12,7 @@ import com.glocks.web_parser.model.app.ListDataMgmt;
 import com.glocks.web_parser.model.app.WebActionDb;
 import com.glocks.web_parser.repository.app.SysParamRepository;
 import com.glocks.web_parser.repository.app.WebActionDbRepository;
+import com.glocks.web_parser.service.fileCopy.ListFileManagementService;
 import com.glocks.web_parser.service.fileOperations.FileOperations;
 import com.glocks.web_parser.service.operatorSeries.OperatorSeriesService;
 import com.glocks.web_parser.service.parser.ListMgmt.CommonFunctions;
@@ -34,18 +39,23 @@ public class BlockedTacBulkDel implements IRequestTypeAction {
     Validation validation;
     @Autowired
     AppConfig appConfig;
-
+    @Autowired
+    ListFileManagementService listFileManagementService;
     @Autowired
     FileOperations fileOperations;
     @Autowired
     SysParamRepository sysParamRepository;
     @Autowired
     CommonFunctions commonFunctions;
+    @Autowired
+    DbConfigService dbConfigService;
+    @Autowired
+    AlertService alertService;
 
     @Override
     public  void executeInitProcess(WebActionDb webActionDb, ListDataMgmt listDataMgmt) {
         logger.info("Starting the init process for blocked tac list, for request {} and action {}",
-                listDataMgmt.getRequestType(), listDataMgmt.getAction());
+                listDataMgmt.getRequestMode(), listDataMgmt.getAction());
 
         webActionDbRepository.updateWebActionStatus(2, webActionDb.getId());
         executeValidateProcess(webActionDb, listDataMgmt);
@@ -53,7 +63,7 @@ public class BlockedTacBulkDel implements IRequestTypeAction {
     }
     public void executeValidateProcess(WebActionDb webActionDb, ListDataMgmt listDataMgmt) {
         logger.info("Starting the validate process for blocked list, for request {} and action {}",
-                listDataMgmt.getRequestType(), listDataMgmt.getAction());
+                listDataMgmt.getRequestMode(), listDataMgmt.getAction());
 
         try {
 
@@ -64,8 +74,9 @@ public class BlockedTacBulkDel implements IRequestTypeAction {
 
             logger.info("File path is {}", filePath);
             if(!fileOperations.checkFileExists(filePath)) {
-                logger.error("File does not exist");
-                commonFunctions.updateFailStatus(webActionDb, listDataMgmt);
+                logger.error("File does not exists {}", filePath);
+                alertService.raiseAnAlert("alert6001", "List Mgmt Blocked Tac List", currentFileName, 0);
+//                commonFunctions.updateFailStatus(webActionDb, listDataMgmt);
                 return ;
             }
             if(currFile.getTotalRecords() > Integer.parseInt(sysParamRepository.getValueFromTag("LIST_MGMT_FILE_COUNT"))) {
@@ -93,7 +104,7 @@ public class BlockedTacBulkDel implements IRequestTypeAction {
         FileDto currFile = new FileDto(currentFileName, appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId());
         try {
 
-            File outFile = new File(appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/" + listDataMgmt.getTransactionId()+ ".txt");
+            File outFile = new File(appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/" + listDataMgmt.getTransactionId()+ ".csv");
             PrintWriter writer = new PrintWriter(outFile);
 
             try(BufferedReader reader = new BufferedReader( new FileReader(filePath))) {
@@ -112,7 +123,7 @@ public class BlockedTacBulkDel implements IRequestTypeAction {
                     }
                     else {
                         logger.info("The entry failed the validation, with reason {}", validateEntry);
-                        writer.println(blockedTacDto.getTac()+","+validateEntry);
+                        writer.println((blockedTacDto.getTac()==null?"":blockedTacDto.getTac())+","+dbConfigService.getValue(validateEntry));
                         failedCount++;
                         continue;
                     }
@@ -121,6 +132,9 @@ public class BlockedTacBulkDel implements IRequestTypeAction {
                     else failedCount++;
                 }
                 writer.close();
+                listFileManagementService.saveListManagementEntity(listDataMgmt.getTransactionId(), ListType.BLOCKEDTACLIST, FileType.BULK,
+                        appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/",
+                        listDataMgmt.getTransactionId() + ".csv", currFile.getTotalRecords());
                 currFile.setSuccessRecords(successCount);
                 currFile.setFailedRecords(failedCount);
             } catch (Exception ex) {
@@ -145,7 +159,7 @@ public class BlockedTacBulkDel implements IRequestTypeAction {
         try(BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String headers = reader.readLine();
             String[] header = headers.split(appConfig.getListMgmtFileSeparator(), -1);
-            if(header.length != 3) {
+            if(header.length != 1) {
                 return false;
             }
             BlockedTacDto blockedTacDto = new BlockedTacDto(header);

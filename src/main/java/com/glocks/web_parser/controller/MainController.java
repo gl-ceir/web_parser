@@ -7,6 +7,7 @@ import com.glocks.web_parser.service.parser.FeatureInterface;
 import com.glocks.web_parser.service.parser.FeatureList;
 import com.glocks.web_parser.service.parser.ListMgmt.ListMgmtFeature;
 import com.glocks.web_parser.service.parser.TRC.TRCFeature;
+import com.glocks.web_parser.utils.VirtualIpAddressUtil;
 import lombok.Synchronized;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,8 +17,10 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -37,18 +40,34 @@ public class MainController {
 
     @Autowired
     FeatureList featureList;
+    @Autowired
+    VirtualIpAddressUtil virtualIpAddressUtil;
+
     private final Logger logger = LogManager.getLogger(MainController.class);
     AtomicInteger isRunning = new AtomicInteger(0);
 
 
     @Scheduled(cron = "* * * * * *")
     public void listPendingProcessTask() throws InterruptedException {
+        // check if vip here or not, if yes then process
+        while (true) {
+            if ( virtualIpAddressUtil.getFullList()) {  //remove !
+                break;
+                //     break; // Server is active, no need to keep checking
+            } else {
+                logger.info("VIP not found. Sleeping for " + appConfig.getWebParserSleepTime() + " seconds.");
+                sleepForSeconds(appConfig.getWebParserSleepTime());
+            }
+        }
+
+
         if(isRunning.get() ==  1) {
             logger.info("Process already running...");
         }
         else {
             logger.info("Starting the web parser process.");
-            List<WebActionDb> listOfPendingTasks = webActionDbRepository.getListOfPendingTasks();
+            List<WebActionDb> listOfPendingTasks = webActionDbRepository.getListOfPendingTasks(appConfig.getFeatureList());
+            logger.info(listOfPendingTasks);
             if (listOfPendingTasks.isEmpty()) {
                 logger.info("No tasks to perform");
             } else {
@@ -66,7 +85,7 @@ public class MainController {
         String state = wb.getState() == 1 ? "init" : wb.getState() == 2 ? "validateProcess" :
                 wb.getState() == 3 ? "executeProcess" : "";
         if(state.isEmpty()) {
-            logger.error("The web_action_db entry does not have the state.");
+            logger.error("The web_action_db entry does not have the state column value populated.");
             return;
         }
         featureList.getFeatures()
@@ -89,6 +108,14 @@ public class MainController {
                 });
 
 
+    }
+
+    private static void sleepForSeconds(int seconds) {
+        try {
+            TimeUnit.SECONDS.sleep(seconds);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
 

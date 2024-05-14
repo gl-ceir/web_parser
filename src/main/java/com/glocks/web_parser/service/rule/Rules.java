@@ -30,7 +30,7 @@ public class Rules {
     @Autowired
     SysParamRepository sysParamRepository;
 
-    public String applyRule(List<RuleDto> ruleList, TrcLocalManufacturedDevice trcLocalManufacturedDevice, boolean gracePeriod, Connection conn) {
+    public String applyRule(List<RuleDto> ruleList, String imei, boolean gracePeriod, Connection conn) {
         String[] args = {
                 "", "", "", "", "","","","","","","","","",""
         };
@@ -44,19 +44,20 @@ public class Rules {
                 String ruleName = ruleDto.getName();
                 args[0] = ruleName;
                 args[1] = "1";
-                args[3] = trcLocalManufacturedDevice.getImei().length() > 14 ?
-                        trcLocalManufacturedDevice.getImei().substring(0,14) : trcLocalManufacturedDevice.getImei();
+                args[3] = imei.length() > 14 ? imei.substring(0,14): imei;
+                args[9] = "IMEI";
+                args[10] = "GSM";
 
 
                 String executeRuleOutput = RuleEngineApplication.startRuleEngine(args, conn, bw);
                 String expectedRuleOutput = ruleDto.getOutput();
 
                 if(executeRuleOutput.equalsIgnoreCase(expectedRuleOutput)) {
-                    logger.info("Rule {} passed for imei {}", ruleName, trcLocalManufacturedDevice.getImei());
+                    logger.info("Rule {} passed for imei {}", ruleName, imei);
                 }
                 else {
-                    ans = ruleDto.getRuleMessage();
-                    logger.info("Rule {} failed for imei {}", ruleName, trcLocalManufacturedDevice.getImei());
+                    ans = ruleDto.getName();
+                    logger.info("Rule {} failed for imei {}", ruleName, imei);
                     args[1] = "2";
                     args[13] = gracePeriod ? ruleDto.getGraceAction() : ruleDto.getPostGraceAction();
                     String actionOutput = RuleEngineApplication.startRuleEngine(args, conn, bw);
@@ -74,10 +75,58 @@ public class Rules {
             }
         } catch (Exception e) {
             logger.error("Error with {} ", e.getMessage());
-            ans = e.getMessage();
         }
         return ans;
     }
+
+//    public String applyRule(List<RuleDto> ruleList, TrcLocalManufacturedDevice trcLocalManufacturedDevice, boolean gracePeriod, Connection conn) {
+//        String[] args = {
+//                "", "", "", "", "","","","","","","","","",""
+//        };
+////        boolean gracePeriod = checkGracePeriod();
+//        BufferedWriter bw = null;
+//        String ans = "";
+//        try {
+//
+//            for(RuleDto ruleDto: ruleList) {
+//
+//                String ruleName = ruleDto.getName();
+//                args[0] = ruleName;
+//                args[1] = "1";
+//                args[3] = imei.length() > 14 ?
+//                        imei.substring(0,14) : imei;
+//
+//
+//                String executeRuleOutput = RuleEngineApplication.startRuleEngine(args, conn, bw);
+//                String expectedRuleOutput = ruleDto.getOutput();
+//
+//                if(executeRuleOutput.equalsIgnoreCase(expectedRuleOutput)) {
+//                    logger.info("Rule {} passed for imei {}", ruleName, imei);
+//                }
+//                else {
+//                    ans = ruleDto.getRuleMessage();
+//                    logger.info("Rule {} failed for imei {}", ruleName, imei);
+//                    args[1] = "2";
+//                    args[13] = gracePeriod ? ruleDto.getGraceAction() : ruleDto.getPostGraceAction();
+//                    String actionOutput = RuleEngineApplication.startRuleEngine(args, conn, bw);
+//                    String currentAction = gracePeriod ? ruleDto.getFailedRuleActionGrace() :
+//                            ruleDto.getFailedRuleActionPostGrace();
+//                    if(currentAction.equalsIgnoreCase("Record")) {
+//                        logger.info("Moving to the next record");
+//                        break;
+//                    }
+//                    else if(currentAction.equalsIgnoreCase("Rule")) {
+//                        logger.info("Moving to next rule");
+//                        continue;
+//                    }
+//                }
+//            }
+//        } catch (Exception e) {
+//            logger.error("Error with {} ", e.getMessage());
+//            ans = e.getMessage();
+//        }
+//        return ans;
+//    }
 
     public boolean checkGracePeriod() {
         try {

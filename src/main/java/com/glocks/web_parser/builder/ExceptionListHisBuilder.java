@@ -3,6 +3,7 @@ package com.glocks.web_parser.builder;
 
 import com.glocks.web_parser.model.app.ExceptionList;
 import com.glocks.web_parser.model.app.ExceptionListHis;
+import com.glocks.web_parser.model.app.ListDataMgmt;
 import lombok.Builder;
 import org.springframework.stereotype.Component;
 
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Component;
 @Builder
 public class ExceptionListHisBuilder {
 
-    public static ExceptionListHis forInsert(ExceptionList exceptionList, int operation) {
+    public static ExceptionListHis forInsert(ExceptionList exceptionList, int operation, ListDataMgmt listDataMgmt) {
         ExceptionListHis exceptionListHis = new ExceptionListHis();
         exceptionListHis.setImei(exceptionList.getImei());
         exceptionListHis.setImsi(exceptionList.getImsi());
@@ -25,8 +26,8 @@ public class ExceptionListHisBuilder {
         exceptionListHis.setOperatorName(exceptionList.getOperatorName());
 
         exceptionListHis.setRequestType(exceptionList.getRequestType());
-        exceptionListHis.setTxnId(exceptionList.getTxnId());
-        exceptionListHis.setUserId(exceptionList.getUserId());
+        exceptionListHis.setTxnId(listDataMgmt.getTransactionId());
+        exceptionListHis.setUserId(listDataMgmt.getUserId());
 
         exceptionListHis.setTac(exceptionList.getTac());
         exceptionListHis.setSource(exceptionList.getSource());

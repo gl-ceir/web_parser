@@ -4,6 +4,9 @@ package com.glocks.web_parser.service.parser.TRC;
 import com.glocks.web_parser.alert.AlertService;
 import com.glocks.web_parser.config.AppConfig;
 import com.glocks.web_parser.config.AppDbConfig;
+import com.glocks.web_parser.config.DbConfigService;
+import com.glocks.web_parser.constants.FileType;
+import com.glocks.web_parser.constants.ListType;
 import com.glocks.web_parser.dto.FileDto;
 import com.glocks.web_parser.dto.RuleDto;
 import com.glocks.web_parser.dto.TrcLocalManufacturerDto;
@@ -11,6 +14,7 @@ import com.glocks.web_parser.model.app.TrcDataMgmt;
 import com.glocks.web_parser.model.app.TrcLocalManufacturedDevice;
 import com.glocks.web_parser.model.app.WebActionDb;
 import com.glocks.web_parser.repository.app.*;
+import com.glocks.web_parser.service.fileCopy.ListFileManagementService;
 import com.glocks.web_parser.service.fileOperations.FileOperations;
 import com.glocks.web_parser.service.rule.Rules;
 import org.slf4j.Logger;
@@ -50,8 +54,15 @@ public class LMDataSubFeature {
     Rules rules;
     @Autowired
     SysParamRepository sysParamRepository;
+
+    @Autowired
+    ListFileManagementService listFileManagementService;
     @Autowired
     AppDbConfig appDbConfig;
+    @Autowired
+    DbConfigService dbConfigService;
+
+
 
     HashMap<String, String> hashMap = new HashMap<>();
 
@@ -66,6 +77,7 @@ public class LMDataSubFeature {
 
     void validateProcess(WebActionDb webActionDb) {
         logger.info("Validating the file for local manufacturer dump");
+        //dbConfigService.loadAllConfig();
         try {
             // only check the header and move next
             TrcDataMgmt trcDataMgmt = trcDataMgmtRepository.findByTransactionId(webActionDb.getTxnId());
@@ -77,18 +89,19 @@ public class LMDataSubFeature {
 
             logger.info("File path is {}", filePath);
             if(!fileOperations.checkFileExists(filePath)) {
-                logger.error("File does not exist");
-                updateFailStatus(webActionDb, trcDataMgmt, "Some internal problem, please try after some time.", "alert6001", "LM", currentFileName);
+                alertService.raiseAnAlert("alert6001", "LM", currentFileName, 0);
+                logger.error("File does not exists {}", filePath);
+//                updateFailStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForInternalErrorInLM"), "alert6001", "LM", currentFileName);
                 return ;
             }
             if(currFile.getTotalRecords() > Integer.parseInt(sysParamRepository.getValueFromTag("LM_FILE_COUNT"))) {
-                updateFailStatus(webActionDb, trcDataMgmt, "Total number of records in file is greater than the limit", "alert6002", "LM", currentFileName);
+                updateFailStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForRecordsCountErrorInLM"), "alert6002", "LM", currentFileName);
 //                fileOperations.moveFile(currentFileName, currentFileName, appConfig.getLocalManufacturerBaseFilePath() + "/" +
 //                        transactionId, appConfig.getLocalManufacturerProcessedBaseFilePath() + "/" + transactionId);
                 return ;
             }
             if(!fileValidation(filePath)) {
-                updateFailStatus(webActionDb, trcDataMgmt, "Data format is not valid, please check sample file.", "alert6002", "LM", currentFileName);
+                updateFailStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForDataFormatErrorInLM"), "alert6002", "LM", currentFileName);
 //                fileOperations.moveFile(currentFileName, currentFileName, appConfig.getLocalManufacturerBaseFilePath() + "/" +
 //                        transactionId, appConfig.getLocalManufacturerProcessedBaseFilePath() + "/" + transactionId);
                 return ;
@@ -101,10 +114,14 @@ public class LMDataSubFeature {
             boolean output = fileRead(currFile, ruleList, writer);
             writer.close();
             if(!output) {
+                listFileManagementService.saveListManagementEntity(transactionId, ListType.LMDATA, FileType.PROCESSED_FILE,
+                        filePath, currentFileName+"_processed",(long) currFile.getTotalRecords());
                 updateFailStatus(webActionDb, trcDataMgmt, "Some entries failed validation. Please recheck the file", "alert6002", "LM", currentFileName);
                 return;
             }
             logger.info("File is ok will process it now");
+            listFileManagementService.saveListManagementEntity(transactionId, ListType.LMDATA, FileType.PROCESSED_FILE, filePath,
+                    currentFileName+"_processed",(long) currFile.getTotalRecords());
             webActionDbRepository.updateWebActionStatus(3, webActionDb.getId());
             executeProcess(webActionDb);
         } catch (Exception ex) {
@@ -118,11 +135,11 @@ public class LMDataSubFeature {
             TrcDataMgmt trcDataMgmt = trcDataMgmtRepository.findByTransactionId(webActionDb.getTxnId());
             String currentFileName = trcDataMgmt.getFileName();
             String transactionId = trcDataMgmt.getTransactionId();
-            String filePath = appConfig.getLocalManufacturerBaseFilePath() + "/" + transactionId + "/" + currentFileName;
+            String filePath = appConfig.getLocalManufacturerBaseFilePath() + "/" + transactionId + "/" ;
             FileDto currFile = new FileDto(currentFileName, appConfig.getLocalManufacturerBaseFilePath() + "/" + trcDataMgmt.getTransactionId());
             processFile(currFile);
             logger.info("File processed. {}", currFile);
-            updateSuccessStatus(webActionDb, trcDataMgmt, "The file processed successfully.");
+            updateSuccessStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForSuccessInLM"));
 //            fileOperations.moveFile();
         } catch (Exception ex) {
             logger.error("Exception is {}", ex.getMessage());
@@ -165,6 +182,8 @@ public class LMDataSubFeature {
         ) {
             Connection conn = appDbConfig.springDataSource().getConnection();
             String record = null;
+            String ok = dbConfigService.getValue("msgForStatusOkInLM");
+            String nok = dbConfigService.getValue("msgForStatusNotOkInLM");
             outFile.println(reader.readLine()+",Status,Reason");
             try {
                 while((record = reader.readLine()) != null) {
@@ -174,30 +193,30 @@ public class LMDataSubFeature {
                     if(lmDataRecord.length != 5) {
                         logger.error("The record length is not equal to 5 {}",  record);
                         failureCount++;
-                        outFile.println(record + ",NOT-OK" + "," + "Record Length Error");
+                        outFile.println(record + ","+nok+ "," + dbConfigService.getValue("msgForReasonRecordErrorInLM"));
                         continue;
                     }
                     if(lmDataRecord[0].length() < 14) {
                         logger.error("The imei in record {} is less than 14", record);
                         failureCount++;
-                        outFile.println(record + ",NOT-OK" + "," + "IMEI length Error.");
+                        outFile.println(record + "," +nok+"," + dbConfigService.getValue("msgForReasonIMEIFailInLM"));
                         continue;
                     }
                     TrcLocalManufacturerDto trcLocalManufacturerDto = new TrcLocalManufacturerDto(lmDataRecord);
                     if(hashMap.containsKey(trcLocalManufacturerDto.getImei().substring(0,14))) {
                         logger.error("The record with same IMEI already exists: {}", trcLocalManufacturerDto);
                         failureCount++;
-                        outFile.println(record + ",NOT-OK" + "," + "IMEI already exist");
+                        outFile.println(record + ","+ nok + "," + dbConfigService.getValue("msgForReasonIMEIDuplicateInLM"));
                         continue;
                     }
-                    TrcLocalManufacturedDevice trcLocalManufacturedDevice = new TrcLocalManufacturedDevice(lmDataRecord);
-                    String ruleOutput = rules.applyRule(ruleList, trcLocalManufacturedDevice, gracePeriod, conn);
+//                    TrcLocalManufacturedDevice trcLocalManufacturedDevice = new TrcLocalManufacturedDevice(lmDataRecord);
+                    String ruleOutput = rules.applyRule(ruleList, trcLocalManufacturerDto.getImei(), gracePeriod, conn);
                     if(ruleOutput.isEmpty() || ruleOutput.isBlank()) {
                         successCount++;
-                        outFile.println(record + ",OK" + "," + "NA");
+                        outFile.println(record + ","+ok + "," + dbConfigService.getValue("msgForReasonSuccessInLM"));
                     } else {
                         failureCount++;
-                        outFile.println(record + ",NOT-OK" + "," + ruleOutput);
+                        outFile.println(record + "," + nok + "," + dbConfigService.getValue((ruleOutput+"_lm").toLowerCase()));
                     }
                     hashMap.put(trcLocalManufacturerDto.getImei().substring(0,14), record);
                 }

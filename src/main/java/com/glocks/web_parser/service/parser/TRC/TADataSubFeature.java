@@ -3,6 +3,9 @@ package com.glocks.web_parser.service.parser.TRC;
 
 import com.glocks.web_parser.alert.AlertService;
 import com.glocks.web_parser.config.AppConfig;
+import com.glocks.web_parser.config.DbConfigService;
+import com.glocks.web_parser.constants.FileType;
+import com.glocks.web_parser.constants.ListType;
 import com.glocks.web_parser.dto.FileDto;
 import com.glocks.web_parser.dto.TrcTaFileDto;
 import com.glocks.web_parser.model.app.TrcDataMgmt;
@@ -11,6 +14,7 @@ import com.glocks.web_parser.model.app.WebActionDb;
 import com.glocks.web_parser.repository.app.TrcDataMgmtRepository;
 import com.glocks.web_parser.repository.app.TrcTypeApprovedDataRepository;
 import com.glocks.web_parser.repository.app.WebActionDbRepository;
+import com.glocks.web_parser.service.fileCopy.ListFileManagementService;
 import com.glocks.web_parser.service.fileOperations.FileOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +44,11 @@ public class TADataSubFeature {
     @Autowired
     TrcTypeApprovedDataRepository trcTypeApprovedDataRepository;
     @Autowired
+    ListFileManagementService listFileManagementService;
+    @Autowired
     FileOperations fileOperations;
+    @Autowired
+    DbConfigService dbConfigService;
 
     String sortedFileName = "sortedFile.csv";
 
@@ -69,7 +77,9 @@ public class TADataSubFeature {
             String deltaAddFile = appConfig.getTaBaseFilePath() + "/" + trcDataMgmt.getTransactionId() + "/" +
                     "trc_data_ta_dump_add_"+ date+".csv";
             if(!fileOperations.checkFileExists(filePath)) {
-                updateFailStatus(webActionDb, trcDataMgmt, "Some internal problem, please try after some time.", "alert6001", "TA", currentFileName);
+                logger.error("File does not exists {}", filePath);
+                alertService.raiseAnAlert("alert6001", "TA", currentFileName, 0);
+//                updateFailStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForInternalErrorInTA"), "alert6001", "TA", currentFileName);
                 return ;
             }
 
@@ -78,7 +88,7 @@ public class TADataSubFeature {
             logger.info("File {} exists on the path {}", currentFileName,
                     appConfig.getTaBaseFilePath() + "/" + transactionId);
             if(!fileValidation(filePath)) {
-                updateFailStatus(webActionDb, trcDataMgmt, "Data format is not valid, please check sample file.", "alert6002", "TA", currentFileName);
+                updateFailStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForDataFormatErrorInTA"), "alert6002", "TA", currentFileName);
 //                fileOperations.moveFile(currentFileName, currentFileName, appConfig.getTaBaseFilePath() + "/" +
 //                        transactionId, appConfig.getTaProcessedBaseFilePath() + "/" + transactionId);
                 return ;
@@ -109,7 +119,7 @@ public class TADataSubFeature {
 
                 if(!fileOperations.checkFileExists(previousProcessedFilePath)) {
                     logger.error("No previous file exists for TA data.");
-                    updateFailStatus(webActionDb, trcDataMgmt, "Some internal problem, please try after some time.", "alert6001", "TA", previousTrcDataMgmt.getFileName());
+                    updateFailStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForInternalErrorInTA"), "alert6001", "TA", previousTrcDataMgmt.getFileName());
                     return;
                 }
                 // create diff
@@ -130,6 +140,14 @@ public class TADataSubFeature {
 //                    transactionId, appConfig.getTaProcessedBaseFilePath() + "/" + transactionId);
             // all done updating the entry to 3 in web action db and calling process file functions
             webActionDbRepository.updateWebActionStatus(3, webActionDb.getId());
+            listFileManagementService.saveListManagementEntity(transactionId, ListType.TADATA, FileType.PROCESSED_FILE, appConfig.getTaBaseFilePath() + "/" +
+                    transactionId +"/", currentFileName+"_sorted",(long) currFile.getTotalRecords());
+
+            listFileManagementService.saveListManagementEntity(transactionId, ListType.TADATA, FileType.PROCESSED_FILE, appConfig.getTaBaseFilePath() + "/" +
+                    transactionId +"/", "trc_data_ta_dump_del_"+date+".csv", 0L);
+
+            listFileManagementService.saveListManagementEntity(transactionId, ListType.TADATA, FileType.PROCESSED_FILE, appConfig.getTaBaseFilePath() + "/" +
+                    transactionId +"/", "trc_data_ta_dump_add_"+date+".csv", 0L);
             executeProcess(webActionDb);
 
 
@@ -151,7 +169,7 @@ public class TADataSubFeature {
             boolean output1 = fileRead(delFile, 1);
             if(!output1) {
                 logger.error("Error in processing delete delta file for TRC TA data.");
-                updateFailStatus(webActionDb, trcDataMgmt, "Some internal problem, please try after some time.", "alert6003", "while processing delete diff file for TRC TA", delFile.getFileName());
+                updateFailStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForInternalErrorInTA"), "alert6003", "while processing delete diff file for TRC TA", delFile.getFileName());
 //                fileOperations.moveFile(delFile.getFileName(), delFile.getFileName(), appConfig.getTaBaseFilePath() + "/" +
 //                        transactionId, appConfig.getTaProcessedBaseFilePath() + "/" + transactionId);
 //                fileOperations.moveFile(addFile.getFileName(), addFile.getFileName(), appConfig.getTaBaseFilePath() + "/" +
@@ -161,7 +179,7 @@ public class TADataSubFeature {
             boolean output2 = fileRead(addFile, 0);
             if(!output2) {
                 logger.error("Error in processing delete add file for TRC TA data");
-                updateFailStatus(webActionDb, trcDataMgmt, "Some internal problem, please try after some time.", "alert6003", "while processing insert diff file for TRC TA", addFile.getFileName());
+                updateFailStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForInternalErrorInTA"), "alert6003", "while processing insert diff file for TRC TA", addFile.getFileName());
 //                fileOperations.moveFile(delFile.getFileName(), delFile.getFileName(), appConfig.getTaBaseFilePath() + "/" +
 //                        transactionId, appConfig.getTaProcessedBaseFilePath() + "/" + transactionId);
 //                fileOperations.moveFile(addFile.getFileName(), addFile.getFileName(), appConfig.getTaBaseFilePath() + "/" +
@@ -171,7 +189,7 @@ public class TADataSubFeature {
             logger.info("Delete delta file summary for TRC Ta data: {}", delFile);
             logger.info("Add delta file summary for TRC Ta data: {}", addFile);
 
-            updateSuccessStatus(webActionDb, trcDataMgmt, "The file processed successfully.");
+            updateSuccessStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForSuccessInTA"));
 //            fileOperations.moveFile(delFile.getFileName(), delFile.getFileName(), appConfig.getTaBaseFilePath() + "/" +
 //                    transactionId, appConfig.getTaProcessedBaseFilePath() + "/" + transactionId);
 //            fileOperations.moveFile(addFile.getFileName(), addFile.getFileName(), appConfig.getTaBaseFilePath() + "/" +
@@ -200,7 +218,7 @@ public class TADataSubFeature {
                     String[] taDataRecord = record.split(appConfig.getTrcTaFileSeparator(), -1);
                     logger.info("Record length {}", taDataRecord.length);
                     if(taDataRecord.length != 11) {
-                        logger.error("The record length is not equal to 11 {}", Arrays.stream(taDataRecord).toList());
+                        logger.error("The record length is not equal to 11 {}", Arrays.stream(taDataRecord));
                         continue;
                     }
 

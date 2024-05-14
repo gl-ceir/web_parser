@@ -1,9 +1,13 @@
 package com.glocks.web_parser.service.parser.ListMgmt.blockedTac;
 
 import com.glocks.web_parser.config.AppConfig;
+import com.glocks.web_parser.config.DbConfigService;
+import com.glocks.web_parser.constants.FileType;
+import com.glocks.web_parser.constants.ListType;
 import com.glocks.web_parser.model.app.ListDataMgmt;
 import com.glocks.web_parser.model.app.WebActionDb;
 import com.glocks.web_parser.repository.app.WebActionDbRepository;
+import com.glocks.web_parser.service.fileCopy.ListFileManagementService;
 import com.glocks.web_parser.service.fileOperations.FileOperations;
 import com.glocks.web_parser.service.operatorSeries.OperatorSeriesService;
 import com.glocks.web_parser.service.parser.ListMgmt.CommonFunctions;
@@ -27,18 +31,21 @@ public class BlockedTacSingleDel implements IRequestTypeAction {
     Validation validation;
     @Autowired
     FileOperations fileOperations;
-
+    @Autowired
+    ListFileManagementService listFileManagementService;
     @Autowired
     AppConfig appConfig;
     @Autowired
     OperatorSeriesService operatorSeriesService;
     @Autowired
     CommonFunctions commonFunctions;
+    @Autowired
+    DbConfigService dbConfigService;
 
     @Override
     public  void executeInitProcess(WebActionDb webActionDb, ListDataMgmt listDataMgmt) {
         logger.info("Starting the init process for blocked tac list, for request {} and action {}",
-                listDataMgmt.getRequestType(), listDataMgmt.getAction());
+                listDataMgmt.getRequestMode(), listDataMgmt.getAction());
 
         webActionDbRepository.updateWebActionStatus(2, webActionDb.getId());
         executeValidateProcess(webActionDb, listDataMgmt);
@@ -48,7 +55,7 @@ public class BlockedTacSingleDel implements IRequestTypeAction {
     @Override
     public void executeValidateProcess(WebActionDb webActionDb, ListDataMgmt listDataMgmt) {
         logger.info("Starting the validate process for blocked tac list, for request {} and action {}",
-                listDataMgmt.getRequestType(), listDataMgmt.getAction());
+                listDataMgmt.getRequestMode(), listDataMgmt.getAction());
 
         // single and add
         try {
@@ -60,13 +67,16 @@ public class BlockedTacSingleDel implements IRequestTypeAction {
             if (validateOutput.equalsIgnoreCase("")) {
                 logger.info("The entry is valid, it will be processed");
             } else {
-                File outFile = new File(appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/" + listDataMgmt.getTransactionId() + ".txt");
+                File outFile = new File(appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/" + listDataMgmt.getTransactionId() + ".csv");
                 PrintWriter writer = new PrintWriter(outFile);
                 logger.info("The entry failed the validation, with reason {}", validateOutput);
                 writer.println("TAC,Reason"); // print header in file
-                writer.println(tac + "," + validateOutput);
+                writer.println((tac==null?"":tac) + "," + dbConfigService.getValue(validateOutput));
                 commonFunctions.updateFailStatus(webActionDb, listDataMgmt);
                 writer.close();
+                listFileManagementService.saveListManagementEntity(listDataMgmt.getTransactionId(), ListType.BLOCKEDTACLIST, FileType.SINGLE,
+                        appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/",
+                        listDataMgmt.getTransactionId() + ".csv", 1L);
                 return;
             }
             webActionDbRepository.updateWebActionStatus(3, webActionDb.getId());
@@ -80,11 +90,14 @@ public class BlockedTacSingleDel implements IRequestTypeAction {
     public void executeProcess(WebActionDb webActionDb, ListDataMgmt listDataMgmt) {
         try {
             operatorSeriesService.fillOperatorSeriesHash();
-            File outFile = new File(appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/" + listDataMgmt.getTransactionId()+ ".txt");
+            File outFile = new File(appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/" + listDataMgmt.getTransactionId()+ ".csv");
             PrintWriter writer = new PrintWriter(outFile);
             writer.println("TAC,Reason");
             boolean status = commonFunctions.processBlockedTacDelEntry(listDataMgmt, null, 1, writer);
             writer.close();
+            listFileManagementService.saveListManagementEntity(listDataMgmt.getTransactionId(), ListType.BLOCKEDTACLIST, FileType.SINGLE,
+                    appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/",
+                    listDataMgmt.getTransactionId() + ".csv", 1L);
             if(status) {
                 commonFunctions.updateSuccessStatus(webActionDb, listDataMgmt);
             } else commonFunctions.updateFailStatus(webActionDb, listDataMgmt);

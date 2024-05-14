@@ -39,5 +39,8 @@ public class OperatorSeries {
     @Column(name="operator_name")
     String operatorName;
 
+    @Column(name="length")
+    String length;
+
 
 }

@@ -6,13 +6,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.net.URLDecoder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 
 @Service
 public class FileOperations implements IFileOperations{
-        private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     @Override
     public boolean checkFileExists(String fileName) {
         File file = new File(fileName);
@@ -55,15 +56,27 @@ public class FileOperations implements IFileOperations{
 
     public boolean sortFile(String fileName, String sortedFileName) {
         try {
-            ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", "(head -n 1 " + fileName + " && tail -n +2 " + fileName + " | sort)");
-            processBuilder.redirectOutput(ProcessBuilder.Redirect.to(new File(sortedFileName)));
+            String decodedPath = URLDecoder.decode(fileName, "UTF-8");
+            logger.info(decodedPath);
+            File inputFile = new File(fileName);
+            File sortFile = new File(sortedFileName);
+            String command = "(head -n 1 \"" + inputFile.getAbsolutePath() + "\" && tail -n +2 \"" + inputFile.getAbsolutePath() + "\" | sort)";
+            ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c",  command);
+
+            processBuilder.redirectOutput(ProcessBuilder.Redirect.to(sortFile));
             Process process = processBuilder.start();
             int exitStatus = process.waitFor();
             if(exitStatus == 0 ) {
                 logger.info("The file {} is sorted and stored in file {}", fileName, sortedFileName);
                 return true;
             }
-            logger.error("Sorting of the file {} failed due to reason {}", fileName, process.getErrorStream().toString());
+            InputStream errorStream = process.getErrorStream();
+            BufferedReader errorReader = new BufferedReader(new InputStreamReader(errorStream));
+            String line;
+            while ((line = errorReader.readLine()) != null) {
+                logger.error(line);
+            }
+            logger.error("Sorting of the file {} failed due to reason {}", fileName, process.getErrorStream());
             return false;
         } catch (Exception ex) {
             logger.error("Sorting of the file {} failed due to reason {}", fileName, ex.getMessage());
@@ -167,14 +180,14 @@ public class FileOperations implements IFileOperations{
         if(type == 1) {
             processBuilder = new ProcessBuilder( "bash", "-c",
                     "diff -B --changed-group-format='%>' --unchanged-group-format=''" +
-                            " <(tail -n +2 " + previousFile + ") <(tail -n +2 " +
-                            currentFile + ") | (head -n 1 " + previousFile + "; cat)");
+                            " <(tail -n +2 \"" + previousFile + "\") <(tail -n +2 \"" +
+                            currentFile + "\") | (head -n 1 \"" + previousFile + "\"; cat)");
         }
         else {
             processBuilder = new ProcessBuilder( "bash", "-c",
                     "diff -B --changed-group-format='%<' --unchanged-group-format=''" +
-                            " <(tail -n +2 " + previousFile + ") <(tail -n +2 " +
-                            currentFile + ") | (head -n 1 " + previousFile + "; cat)");
+                            " <(tail -n +2 \"" + previousFile + "\") <(tail -n +2 \"" +
+                            currentFile + "\") | (head -n 1 \"" + previousFile + "\"; cat)");
         }
         return processBuilder;
     }

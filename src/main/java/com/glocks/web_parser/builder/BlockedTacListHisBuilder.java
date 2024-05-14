@@ -1,9 +1,6 @@
 package com.glocks.web_parser.builder;
 
-import com.glocks.web_parser.model.app.BlackList;
-import com.glocks.web_parser.model.app.BlackListHis;
-import com.glocks.web_parser.model.app.BlockedTacList;
-import com.glocks.web_parser.model.app.BlockedTacListHis;
+import com.glocks.web_parser.model.app.*;
 import lombok.Builder;
 import org.springframework.stereotype.Component;
 
@@ -11,14 +8,14 @@ import org.springframework.stereotype.Component;
 @Builder
 public class BlockedTacListHisBuilder {
 
-    public static BlockedTacListHis forInsert(BlockedTacList blockedTacList, int operation) {
+    public static BlockedTacListHis forInsert(BlockedTacList blockedTacList, int operation, ListDataMgmt listDataMgmt) {
         BlockedTacListHis blockedTacListHis = new BlockedTacListHis();
         blockedTacListHis.setOperation(operation);
         blockedTacListHis.setRemarks(blockedTacList.getRemarks());//
         blockedTacListHis.setModeType(blockedTacList.getModeType());
         blockedTacListHis.setRequestType(blockedTacList.getRequestType());
-        blockedTacListHis.setTxnId(blockedTacList.getTxnId());
-        blockedTacListHis.setUserId(blockedTacList.getUserId());
+        blockedTacListHis.setTxnId(listDataMgmt.getTransactionId());
+        blockedTacListHis.setUserId(listDataMgmt.getUserId());
         blockedTacListHis.setTac(blockedTacList.getTac());
         blockedTacListHis.setSource(blockedTacList.getSource());
         return blockedTacListHis;

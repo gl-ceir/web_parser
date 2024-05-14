@@ -33,7 +33,7 @@ public class ListMgmtFeature implements FeatureInterface {
         else if(wb.getSubFeature().equalsIgnoreCase(("Black_list"))) {
             blackListSubFeature.delegateInitRequest(wb, listDataMgmt);
         }
-        else if(wb.getSubFeature().equalsIgnoreCase("blocked_tac")) {
+        else if(wb.getSubFeature().equalsIgnoreCase("blocked_tac_list")) {
             blockedTacListSubFeature.delegateInitRequest(wb, listDataMgmt);
         }
     }
@@ -47,7 +47,7 @@ public class ListMgmtFeature implements FeatureInterface {
         else if(wb.getSubFeature().equalsIgnoreCase(("Black_list"))) {
             blackListSubFeature.delegateExecuteProcess(wb, listDataMgmt);
         }
-        else if(wb.getSubFeature().equalsIgnoreCase("blocked_tac")) {
+        else if(wb.getSubFeature().equalsIgnoreCase("blocked_tac_list")) {
             blockedTacListSubFeature.delegateExecuteProcess(wb, listDataMgmt);
         }
     }
@@ -62,7 +62,7 @@ public class ListMgmtFeature implements FeatureInterface {
         else if(wb.getSubFeature().equalsIgnoreCase(("Black_list"))) {
             blackListSubFeature.delegateValidateRequest(wb, listDataMgmt);
         }
-        else if(wb.getSubFeature().equalsIgnoreCase("blocked_tac")) {
+        else if(wb.getSubFeature().equalsIgnoreCase("blocked_tac_list")) {
             blockedTacListSubFeature.delegateValidateRequest(wb, listDataMgmt);
         }
 

@@ -21,7 +21,7 @@ public class BlackListSubFeature {
     @Autowired
     BlackBulkAdd blackBulkAdd;
     @Autowired
-    BlackSingleDel blackBulkDel;
+    BlackBulkDel blackBulkDel;
 
     public void delegateInitRequest(WebActionDb webActionDb, ListDataMgmt listDataMgmt) {
 
