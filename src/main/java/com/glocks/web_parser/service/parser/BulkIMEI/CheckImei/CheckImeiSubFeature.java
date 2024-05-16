@@ -190,6 +190,7 @@ public class CheckImeiSubFeature {
         ) {
             Connection conn = appDbConfig.springDataSource().getConnection();
             String record = null;
+            reader.readLine(); // skipping the header
             try {
                 while((record = reader.readLine()) != null) {
                     if(record.isEmpty()) continue;
@@ -230,6 +231,12 @@ public class CheckImeiSubFeature {
         File file = new File(fileName);
         try(BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String record;
+            record = reader.readLine();
+            String[] firstHeader = record.split(",", -1);
+            if(firstHeader.length != -1 ||  !firstHeader[0].equalsIgnoreCase("IMEI")) { // validating the header
+                logger.error("The record {} is not in correct format {}", record);
+                return false;
+            }
             while((record = reader.readLine()) != null) {
                 String[] imeiRecord = record.split(",", -1);
                 String imei = imeiRecord[0].trim();
