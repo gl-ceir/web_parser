@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
-@Table(name="check_IMEI_req_detail")
+@Table(name="check_imei_req_detail")
 public class CheckImeiReqDetail {
 
     @Id
