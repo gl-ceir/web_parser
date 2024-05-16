@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name="trc_qualified_agents_data")
+@Table(name="trc_qualified_agent_data")
 public class TrcQualifiedAgentsData {
 
     @Id
