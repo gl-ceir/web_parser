@@ -65,6 +65,10 @@ public class AppConfig {
     String virtualIp;
 
     @Value("${web.parser.sleep.time}")
-    Integer webParserSleepTime;
+    String webParserSleepTime;
+    @Value("${notification.url}")
+    String notificationUrl;
 
+    @Value("${web.parser.query.gap}")
+    Integer webParserQueryGap;
 }

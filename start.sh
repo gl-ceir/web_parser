@@ -11,6 +11,6 @@ then
  echo "Process Already Running"
 else
  echo "Starting Process"
-java -Dlog4j.configurationFile=file:./log4j2.xml -jar $build --spring.config.location=file:./application.properties,/u01/eirsapp/configuration/configuration.properties 1>/dev/null 2>/dev/null &
+java -Dlog4j.configurationFile=file:./log4j2.xml -jar $build --spring.config.location=file:/u01/eirsapp/configuration/configuration.properties,file:./application.properties 1>/dev/null 2>/dev/null &
 echo "Process Started"
 fi

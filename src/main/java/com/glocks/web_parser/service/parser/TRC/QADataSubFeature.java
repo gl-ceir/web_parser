@@ -50,7 +50,7 @@ public class QADataSubFeature {
     @Autowired
     DbConfigService dbConfigService;
 
-    String sortedFileName = "sortedFile.csv";
+    String sortedFileName = "sortedFile.txt";
 
     void initProcess(WebActionDb webActionDb) {
         logger.info("Starting the init function for TRC, QA-Data sub feature {}", webActionDb);
@@ -73,9 +73,9 @@ public class QADataSubFeature {
             String date = webActionDb.getModifiedOn().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
             logger.info("Date is {}", date);
             String deltaDeleteFile = appConfig.getQaBaseFilePath() + "/" + trcDataMgmt.getTransactionId() + "/" +
-                    "trc_data_qa_dump_del_"+date+".csv";
+                    "trc_data_qa_dump_del_"+date+".txt";
             String deltaAddFile = appConfig.getQaBaseFilePath() + "/" + trcDataMgmt.getTransactionId() + "/" +
-                    "trc_data_qa_dump_add_"+date+".csv";
+                    "trc_data_qa_dump_add_"+date+".txt";
             if(!fileOperations.checkFileExists(filePath)) {
                 logger.error("File does not exists {}", filePath);
                 alertService.raiseAnAlert("alert6001", "QA", currentFileName, 0);
@@ -91,7 +91,8 @@ public class QADataSubFeature {
             logger.info("File {} exists on the path {}", currentFileName,
                     appConfig.getQaBaseFilePath() + "/" + transactionId);
             if(!fileValidation(filePath)) {
-                updateFailStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForDataFormatErrorInQA"), "alert6002", "QA", currentFileName);
+                updateFailStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForDataFormatErrorInQA"),
+                        "alert6002", "QA", currentFileName, currFile.getTotalRecords(), 0, 0, 0);
 //                fileOperations.moveFile(currentFileName, currentFileName, appConfig.getQaBaseFilePath() + "/" +
 //                        transactionId, appConfig.getQaProcessedBaseFilePath() + "/" + transactionId);
                 return ;
@@ -125,7 +126,9 @@ public class QADataSubFeature {
 
                 if(!fileOperations.checkFileExists(previousProcessedFilePath)) {
                     logger.error("No previous file exists for QA data.");
-                    updateFailStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForInternalErrorInQA"), "alert6001", "QA", previousTrcDataMgmt.getFileName());
+                    updateFailStatus(webActionDb, trcDataMgmt,
+                            dbConfigService.getValue("msgForRemarksForInternalErrorInQA"),
+                            "alert6001", "QA", previousTrcDataMgmt.getFileName(), currFile.getTotalRecords(), 0, 0, 0);
                     return;
                 }
                 // create diff
@@ -151,10 +154,10 @@ public class QADataSubFeature {
                             transactionId +"/", currentFileName+"_sorted",(long) currFile.getTotalRecords());
 
             listFileManagementService.saveListManagementEntity(transactionId, ListType.QADATA, FileType.PROCESSED_FILE, appConfig.getQaBaseFilePath() + "/" +
-                            transactionId +"/", "trc_data_qa_dump_del_"+date+".csv", 0L);
+                            transactionId +"/", "trc_data_qa_dump_del_"+date+".txt", 0L);
 
             listFileManagementService.saveListManagementEntity(transactionId, ListType.QADATA, FileType.PROCESSED_FILE, appConfig.getQaBaseFilePath() + "/" +
-                    transactionId +"/", "trc_data_qa_dump_add_"+date+".csv", 0L);
+                    transactionId +"/", "trc_data_qa_dump_add_"+date+".txt", 0L);
 
         } catch (Exception ex) {
             logger.error(ex.getMessage());
@@ -165,16 +168,20 @@ public class QADataSubFeature {
         TrcDataMgmt trcDataMgmt = trcDataMgmtRepository.findByTransactionId(webActionDb.getTxnId());
         String transactionId = trcDataMgmt.getTransactionId();
         String date = webActionDb.getModifiedOn().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        FileDto delFile = new FileDto("trc_data_qa_dump_del_"+ date+".csv",
+        FileDto delFile = new FileDto("trc_data_qa_dump_del_"+ date+".txt",
                 appConfig.getQaBaseFilePath() + "/"+trcDataMgmt.getTransactionId());
-        FileDto addFile = new FileDto("trc_data_qa_dump_add_"+ date+".csv",
+        FileDto addFile = new FileDto("trc_data_qa_dump_add_"+ date+".txt",
                 appConfig.getQaBaseFilePath() + "/"+trcDataMgmt.getTransactionId());
         try {
 
             boolean output1 = fileRead(delFile, 1);
             if(!output1) {
                 logger.error("Error in processing delete delta file for TRC QA data.");
-                updateFailStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForInternalErrorInQA"), "alert6003", "while processing delete diff file for TRC QA", delFile.getFileName());
+                updateFailStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForInternalErrorInQA"),
+                        "alert6003", "while processing delete delta file for TRC QA", delFile.getFileName(),
+                        addFile.getTotalRecords() + delFile.getTotalRecords(),
+                        addFile.getSuccessRecords(), delFile.getSuccessRecords(),
+                        addFile.getFailedRecords()+delFile.getFailedRecords());
 //
 //                fileOperations.moveFile(delFile.getFileName(), delFile.getFileName(), appConfig.getQaBaseFilePath() + "/" +
 //                        transactionId, appConfig.getQaProcessedBaseFilePath() + "/" + transactionId);
@@ -184,8 +191,12 @@ public class QADataSubFeature {
             }
             boolean output2 = fileRead(addFile, 0);
             if(!output2) {
-                logger.error("Error in processing delete add file for TRC QA data");
-                updateFailStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForInternalErrorInQA"), "alert6003", "while processing delete diff file for TRC QA", delFile.getFileName());
+                logger.error("Error in processing add file for TRC QA data");
+                updateFailStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForInternalErrorInQA"),
+                        "alert6003", "while processing add delta file for TRC QA", addFile.getFileName(),
+                        addFile.getTotalRecords() + delFile.getTotalRecords(),
+                        addFile.getSuccessRecords(), delFile.getSuccessRecords(),
+                        addFile.getFailedRecords()+delFile.getFailedRecords());
 //                fileOperations.moveFile(delFile.getFileName(), delFile.getFileName(), appConfig.getQaBaseFilePath() + "/" +
 //                        transactionId, appConfig.getQaProcessedBaseFilePath() + "/" + transactionId);
 //                fileOperations.moveFile(addFile.getFileName(), addFile.getFileName(), appConfig.getQaBaseFilePath() + "/" +
@@ -195,7 +206,11 @@ public class QADataSubFeature {
             logger.info("Delete delta file summary for TRC QA data: {}", delFile);
             logger.info("Add delta file summary for TRC QA data: {}", addFile);
 
-            updateSuccessStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForSuccessInQA"));
+            updateSuccessStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForSuccessInQA"),
+                    addFile.getTotalRecords() + delFile.getTotalRecords(),
+                    addFile.getSuccessRecords(), delFile.getSuccessRecords(),
+                    addFile.getFailedRecords()+delFile.getFailedRecords()
+                    );
 //            fileOperations.moveFile(delFile.getFileName(), delFile.getFileName(), appConfig.getQaBaseFilePath() + "/" +
 //                    transactionId, appConfig.getQaProcessedBaseFilePath() + "/" + transactionId);
 //            fileOperations.moveFile(addFile.getFileName(), addFile.getFileName(), appConfig.getQaBaseFilePath() + "/" +
@@ -282,12 +297,26 @@ public class QADataSubFeature {
         trcDataMgmtRepository.updateTrcDataMgmtStatus("FAIL", LocalDateTime.now(), remarks,trcDataMgmt.getId());
         alertService.raiseAnAlert(alertId, type, fileName, 0);
     }
+    void updateFailStatus(WebActionDb webActionDb, TrcDataMgmt trcDataMgmt, String remarks, String alertId,
+                          String type, String fileName,
+                          long totalCount, long addCount, long deleteCount, long failureCount) {
+        webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
+        trcDataMgmtRepository.updateTrcDataMgmtStatus("FAIL", LocalDateTime.now(), remarks,trcDataMgmt.getId(),
+                totalCount, addCount, deleteCount, failureCount);
+        alertService.raiseAnAlert(alertId, type, fileName, 0);
+    }
 
     void updateSuccessStatus(WebActionDb webActionDb, TrcDataMgmt trcDataMgmt, String remarks) {
         webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
         trcDataMgmtRepository.updateTrcDataMgmtStatus("DONE", LocalDateTime.now(), remarks,trcDataMgmt.getId());
     }
 
+    void updateSuccessStatus(WebActionDb webActionDb, TrcDataMgmt trcDataMgmt, String remarks, long totalCount,
+                             long addCount, long deleteCount, long failureCount) {
+        webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
+        trcDataMgmtRepository.updateTrcDataMgmtStatus("DONE", LocalDateTime.now(), remarks,trcDataMgmt.getId(),
+                totalCount, addCount, deleteCount, failureCount);
+    }
     boolean fileValidation(String fileName) {
         File file = new File(fileName);
         try(BufferedReader reader = new BufferedReader(new FileReader(file))) {

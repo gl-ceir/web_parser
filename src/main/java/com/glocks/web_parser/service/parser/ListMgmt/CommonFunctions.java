@@ -8,6 +8,7 @@ import com.glocks.web_parser.dto.BlockedTacDto;
 import com.glocks.web_parser.dto.ListMgmtDto;
 import com.glocks.web_parser.model.app.*;
 import com.glocks.web_parser.repository.app.*;
+import com.glocks.web_parser.service.hlr.HlrService;
 import com.glocks.web_parser.service.operatorSeries.OperatorSeriesService;
 import com.glocks.web_parser.validator.Validation;
 import org.slf4j.Logger;
@@ -50,6 +51,8 @@ public class CommonFunctions {
     BlockedTacListHisRepository blockedTacListHisRepository;
     @Autowired
     DbConfigService dbConfigService;
+    @Autowired
+    HlrService hlrService;
 
 
     public boolean processExceptionSingleAddEntry(ListDataMgmt listDataMgmt, ListMgmtDto record, int type, PrintWriter writer) {
@@ -59,12 +62,26 @@ public class CommonFunctions {
         boolean imsiEmpty = validation.isEmptyAndNull(imsi);
         boolean msisdnEmpty = validation.isEmptyAndNull(msisdn);
         boolean imeiEmpty = validation.isEmptyAndNull(imei);
+        boolean filled = false;
+
         try {
             // search in list if already exists or not.
 
             if(!imsiEmpty) imsi = imsi.trim();
             if(!imeiEmpty) imei = imei.trim();
             if(!msisdnEmpty) msisdn = msisdn.trim();
+            if(imeiEmpty && imsiEmpty && !msisdnEmpty) {
+               imsi = hlrService.popluateImsi(msisdn);
+                if(validation.isEmptyAndNull(imsi)) {
+                    logger.error("The entry is failed.");
+                    writer.println((msisdnEmpty ? "":msisdn)+","+(imsiEmpty ? "":imsi)+","+(imeiEmpty ? "":imei )+","+
+                            dbConfigService.getValue("msgForEntryFailedInExceptionList"));
+                    return false;
+                }
+                filled = true;
+                imsiEmpty = false;
+            }
+
             ExceptionList exceptionList = null;
             if (!imsiEmpty && !imeiEmpty && !msisdnEmpty) {
                 exceptionList = exceptionListRepository.findExceptionListByImeiAndMsisdnAndImsi(imei.substring(0, 14), msisdn, imsi);
@@ -91,6 +108,9 @@ public class CommonFunctions {
             else {
                 logger.info("The entry for msisdn {}, imsi {} and imei {} does not exist.", msisdn, imsi, imei);
                 String operatorName = operatorSeriesService.getOperatorName(imsiEmpty, msisdnEmpty, imsi, msisdn);
+                if(filled && type == 1) {
+                    listDataMgmt.setImsi(imsi);
+                } else if (filled && type == 1 ) record.setImsi(imsi);
                 exceptionList = type == 1 ? ExceptionListBuilder.forInsert(listDataMgmt, operatorName) : ExceptionListBuilder.forInsert(listDataMgmt, record, operatorName);
                 logger.info("Entry save in exception list {}",exceptionList);
                 exceptionListRepository.save(exceptionList);
@@ -117,12 +137,26 @@ public class CommonFunctions {
         boolean imsiEmpty = validation.isEmptyAndNull(imsi);
         boolean msisdnEmpty = validation.isEmptyAndNull(msisdn);
         boolean imeiEmpty = validation.isEmptyAndNull(imei);
+        boolean filled = false;
+
         try {
             // search in list if already exists or not.
 
             if(!imsiEmpty) imsi = imsi.trim();
             if(!imeiEmpty) imei = imei.trim();
             if(!msisdnEmpty) msisdn = msisdn.trim();
+            if(imeiEmpty && imsiEmpty && !msisdnEmpty) {
+                imsi = hlrService.popluateImsi(msisdn);
+                if(validation.isEmptyAndNull(imsi)) {
+                    logger.error("The entry is failed.");
+                    writer.println((msisdnEmpty ? "":msisdn)+","+(imsiEmpty ? "":imsi)+","+(imeiEmpty ? "":imei )+","+
+                            dbConfigService.getValue("msgForEntryFailedInExceptionList"));
+                    return false;
+                }
+                filled = true;
+                imsiEmpty = false;
+
+            }
             ExceptionList exceptionList = null;
             if (!imsiEmpty && !imeiEmpty && !msisdnEmpty) {
                 exceptionList = exceptionListRepository.findExceptionListByImeiAndMsisdnAndImsi(imei.substring(0, 14), msisdn, imsi);
@@ -177,11 +211,25 @@ public class CommonFunctions {
         boolean imsiEmpty = validation.isEmptyAndNull(imsi);
         boolean msisdnEmpty = validation.isEmptyAndNull(msisdn);
         boolean imeiEmpty = validation.isEmptyAndNull(imei);
+        boolean filled = true;
+//        String populatedImsi = "";
         try {
             // search in list if already exists or not.
             if(!imsiEmpty) imsi = imsi.trim();
             if(!imeiEmpty) imei = imei.trim();
             if(!msisdnEmpty) msisdn = msisdn.trim();
+            if(imeiEmpty && imsiEmpty && !msisdnEmpty) {
+                imsi = hlrService.popluateImsi(msisdn);
+                if(validation.isEmptyAndNull(imsi)) {
+                    logger.error("The entry is failed.");
+                    writer.println((msisdnEmpty ? "":msisdn)+","+(imsiEmpty ? "":imsi)+","+(imeiEmpty ? "":imei )+","+
+                            dbConfigService.getValue("msgForEntryFailedInBlackList"));
+                    return false;
+                }
+                filled = true;
+                imsiEmpty = false;
+            }
+
             BlackList blackList = null;
             if (!imsiEmpty && !imeiEmpty && !msisdnEmpty) {
                 blackList = blackListRepository.findBlackListByImeiAndMsisdnAndImsi(imei.substring(0, 14), msisdn, imsi);
@@ -210,6 +258,9 @@ public class CommonFunctions {
             else {
                 logger.info("The entry for msisdn {}, imsi {} and imei {} does not exist.", msisdn, imsi, imei);
                 String operatorName = operatorSeriesService.getOperatorName(imsiEmpty, msisdnEmpty, imsi, msisdn);
+                if(filled && type == 1) {
+                    listDataMgmt.setImsi(imsi);
+                } else record.setImsi(imsi);
                 blackList = type == 1 ? BlackListBuilder.forInsert(listDataMgmt, operatorName) : BlackListBuilder.forInsert(listDataMgmt, record, operatorName);
 
                 logger.info("Entry save in black list {}",blackList);
@@ -239,11 +290,26 @@ public class CommonFunctions {
         boolean imsiEmpty = validation.isEmptyAndNull(imsi);
         boolean msisdnEmpty = validation.isEmptyAndNull(msisdn);
         boolean imeiEmpty = validation.isEmptyAndNull(imei);
+        boolean filled = false;
+//        String populatedImsi = "";
         try {
             // search in list if already exists or not.
             if(!imsiEmpty) imsi = imsi.trim();
             if(!imeiEmpty) imei = imei.trim();
             if(!msisdnEmpty) msisdn = msisdn.trim();
+            // check if imsi is populated in case of only msisdn in request.
+            if(imeiEmpty && imsiEmpty && !msisdnEmpty) {
+                imsi = hlrService.popluateImsi(msisdn);
+                if(validation.isEmptyAndNull(imsi)) {
+                    logger.error("The entry is failed.");
+                    writer.println((msisdnEmpty ? "":msisdn)+","+(imsiEmpty ? "":imsi)+","+(imeiEmpty ? "":imei )+","+
+                            dbConfigService.getValue("msgForEntryFailedInBlackList"));
+                    return false;
+                }
+                filled = true;
+                imsiEmpty = false;
+            }
+
             BlackList blackList = null;
             if (!imsiEmpty && !imeiEmpty && !msisdnEmpty) {
                 blackList = blackListRepository.findBlackListByImeiAndMsisdnAndImsi(imei.substring(0, 14), msisdn, imsi);
@@ -251,10 +317,13 @@ public class CommonFunctions {
                 blackList = blackListRepository.findBlackListByImeiAndImsi(imei.substring(0, 14), imsi);
             } else if (!imeiEmpty && imsiEmpty && !msisdnEmpty) {
                 blackList = blackListRepository.findBlackListByImeiAndMsisdn(imei.substring(0, 14), msisdn);
+                // fill imsi
             } else if (imeiEmpty && !imsiEmpty && !msisdnEmpty) {
                 blackList = blackListRepository.findBlackListByImsiAndMsisdn(imsi, msisdn);
             } else if (imeiEmpty && imsiEmpty && !msisdnEmpty) {
                 blackList = blackListRepository.findBlackListByMsisdn(msisdn);
+                // fill imsi
+
             } else if (imeiEmpty && !imsiEmpty && msisdnEmpty) {
                 blackList = blackListRepository.findBlackListByImsi(imsi);
             } else if (!imeiEmpty && imsiEmpty && msisdnEmpty) {
@@ -386,10 +455,23 @@ public class CommonFunctions {
         listDataMgmtRepository.updateListDataMgmtStatus("FAIL", LocalDateTime.now(),listDataMgmt.getId());
 //        alertService.raiseAnAlert(alertId, type, fileName, 0);
     }
+    public void updateFailStatus(WebActionDb webActionDb, ListDataMgmt listDataMgmt, long totalCount,
+                                 long successCount, long failureCount) {
+        webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
+        listDataMgmtRepository.updateListDataMgmtStatus("FAIL", LocalDateTime.now(),listDataMgmt.getId(),
+                totalCount, successCount, failureCount);
+//        alertService.raiseAnAlert(alertId, type, fileName, 0);
+    }
 
     public void updateSuccessStatus(WebActionDb webActionDb, ListDataMgmt listDataMgmt) {
         webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
         listDataMgmtRepository.updateListDataMgmtStatus("DONE", LocalDateTime.now(), listDataMgmt.getId());
+    }
+    public void updateSuccessStatus(WebActionDb webActionDb, ListDataMgmt listDataMgmt, long totalCount,
+                                    long successCount, long failureCount) {
+        webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
+        listDataMgmtRepository.updateListDataMgmtStatus("DONE", LocalDateTime.now(),
+                listDataMgmt.getId(), totalCount, successCount, failureCount);
     }
 
     public String validateEntry(String imsi, String imei, String msisdn, String[] msisdnPrefix, String[] imsiPrefix) {
@@ -465,5 +547,6 @@ public class CommonFunctions {
         }
         return "";
     }
+
 
 }

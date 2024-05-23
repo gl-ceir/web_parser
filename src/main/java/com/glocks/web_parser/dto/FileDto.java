@@ -34,7 +34,8 @@ public class FileDto {
     public FileDto(String fileName, String filePath) {
         this.fileName = fileName;
         this.filePath = filePath;
-        this.totalRecords = getFileRecordCount(filePath + "/" + fileName);
+        long fileRecordCount = getFileRecordCount(filePath + "/" + fileName);
+        this.totalRecords = fileRecordCount > 0 ? fileRecordCount-1 : fileRecordCount; // to remove header count
         this.successRecords = 0;
         this.failedRecords = 0;
     }
@@ -45,7 +46,8 @@ public class FileDto {
             File file1 = new File(file);
             logger.info("Getting the file size for file {}", file1.toURI());
             Path pathFile = Paths.get(file1.toURI());
-            return (long) Files.lines(pathFile).count();
+            return (long) Files.lines(pathFile).filter(line -> line.length() > 0).count(); // to remove empty lines from count.
+//            return (long) Files.lines(pathFile).count();
         } catch (IOException e) {
             e.printStackTrace();
         }

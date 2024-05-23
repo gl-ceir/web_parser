@@ -3,6 +3,8 @@ package com.glocks.web_parser.service.fileCopy;
 
 import com.glocks.web_parser.config.AppConfig;
 import com.glocks.web_parser.constants.CopyStatus;
+import com.glocks.web_parser.constants.FileType;
+import com.glocks.web_parser.constants.ListType;
 import com.glocks.web_parser.dto.SftpDestinationDto;
 import com.glocks.web_parser.dto.SftpFileDto;
 import com.glocks.web_parser.model.app.ListFileManagement;
@@ -16,7 +18,9 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import static com.glocks.web_parser.constants.Constants.applicationName;
 
@@ -82,6 +86,34 @@ public class SftpFileService {
         save(listFileManagement);
         }
     }
+    public boolean sendCopyFileInfo(String transactionId, ListType listType, FileType fileType,
+                                 String sourceFilePath, String sourceFileName,
+                                 Long totalCount, List<String> destinationServers, List<String> destinationFilePath) {
+        log.info("Going to call SFTP URL for file:{}", sourceFileName);
+        List<SftpDestinationDto> destinationDtos = new ArrayList<>();
+        for(int i=0;i<destinationServers.size();i++) {
+            SftpDestinationDto destinationDto = new SftpDestinationDto();
+            destinationDto.setDestServerName(destinationServers.get(i));
+            destinationDto.setDestFilePath(destinationFilePath.get(i) + "/" + transactionId);
+            destinationDtos.add(destinationDto);
+        }
+        SftpFileDto sftpFileDto = SftpFileDto.builder()
+                .txnId(transactionId)
+                .sourceFileName(sourceFileName)
+                .applicationName(applicationName)
+                .destination(destinationDtos)
+                .sourceFilePath(sourceFilePath)
+                .serverName(serverName)
+                .fileType("web parser processed file")
+                .remarks("")
+                .sourceServerName(appConfig.getSourceServerName()).build();
+        CopyStatus copyStatus = callUrl(sftpFileDto, "");
+        if(copyStatus == CopyStatus.NEW) {
+            return false;
+        }
+        return true;
+    }
+
 
     public ListFileManagement save(ListFileManagement listFileManagement) {
         log.info("Going to Save listFileManagement {}", listFileManagement);

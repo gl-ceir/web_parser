@@ -41,6 +41,18 @@ public class TrcDataMgmt {
     @Column(name="request_type")
     String requestType;
 
-    @Column(name="remarks")
-    String remarks;
+    @Column(name="processed_remarks")
+    String processedRemarks;
+
+    @Column(name="add_count")
+    long addCount;
+
+    @Column(name="delete_count")
+    long deleteCount;
+
+    @Column(name="failure_count")
+    long failureCount;
+
+    @Column(name="total_count")
+    long totalCount;
 }

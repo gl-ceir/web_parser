@@ -36,6 +36,8 @@ public class CheckImeiReqDetail {
     @Column(name="request_id")
     String requestId;
 
+    @Column(name="fail_process_description")
+    String failProcessDescription;
 
 
 }

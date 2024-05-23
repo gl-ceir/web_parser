@@ -95,13 +95,18 @@ public class LMDataSubFeature {
                 return ;
             }
             if(currFile.getTotalRecords() > Integer.parseInt(sysParamRepository.getValueFromTag("LM_FILE_COUNT"))) {
-                updateFailStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForRecordsCountErrorInLM"), "alert6002", "LM", currentFileName);
+                updateFailStatus(webActionDb, trcDataMgmt,
+                        dbConfigService.getValue("msgForRemarksForRecordsCountErrorInLM"), "alert6002", "LM",
+                        currentFileName, currFile.getTotalRecords(), currFile.getSuccessRecords(),0, currFile.getFailedRecords());
 //                fileOperations.moveFile(currentFileName, currentFileName, appConfig.getLocalManufacturerBaseFilePath() + "/" +
 //                        transactionId, appConfig.getLocalManufacturerProcessedBaseFilePath() + "/" + transactionId);
                 return ;
             }
             if(!fileValidation(filePath)) {
-                updateFailStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForDataFormatErrorInLM"), "alert6002", "LM", currentFileName);
+                updateFailStatus(webActionDb, trcDataMgmt,
+                        dbConfigService.getValue("msgForRemarksForDataFormatErrorInLM"), "alert6002", "LM",
+                        currentFileName, currFile.getTotalRecords(), currFile.getSuccessRecords(),0,
+                        currFile.getFailedRecords());
 //                fileOperations.moveFile(currentFileName, currentFileName, appConfig.getLocalManufacturerBaseFilePath() + "/" +
 //                        transactionId, appConfig.getLocalManufacturerProcessedBaseFilePath() + "/" + transactionId);
                 return ;
@@ -113,15 +118,17 @@ public class LMDataSubFeature {
             logger.info(ruleList.toString());
             boolean output = fileRead(currFile, ruleList, writer);
             writer.close();
+            listFileManagementService.saveListManagementEntity(transactionId, ListType.LMDATA, FileType.PROCESSED_FILE, filePath,
+                    currentFileName+"_processed",(long) currFile.getTotalRecords());
             if(!output) {
-                listFileManagementService.saveListManagementEntity(transactionId, ListType.LMDATA, FileType.PROCESSED_FILE,
-                        filePath, currentFileName+"_processed",(long) currFile.getTotalRecords());
-                updateFailStatus(webActionDb, trcDataMgmt, "Some entries failed validation. Please recheck the file", "alert6002", "LM", currentFileName);
+//                listFileManagementService.saveListManagementEntity(transactionId, ListType.LMDATA, FileType.PROCESSED_FILE,
+//                        filePath, currentFileName+"_processed",(long) currFile.getTotalRecords());
+                updateFailStatus(webActionDb, trcDataMgmt,
+                        dbConfigService.getValue("msgForRemarksForValidationFailedInLM"), "alert6002", "LM",
+                        currentFileName, currFile.getTotalRecords(), currFile.getSuccessRecords(), 0,currFile.getFailedRecords());
                 return;
             }
             logger.info("File is ok will process it now");
-            listFileManagementService.saveListManagementEntity(transactionId, ListType.LMDATA, FileType.PROCESSED_FILE, filePath,
-                    currentFileName+"_processed",(long) currFile.getTotalRecords());
             webActionDbRepository.updateWebActionStatus(3, webActionDb.getId());
             executeProcess(webActionDb);
         } catch (Exception ex) {
@@ -140,6 +147,8 @@ public class LMDataSubFeature {
             processFile(currFile);
             logger.info("File processed. {}", currFile);
             updateSuccessStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForSuccessInLM"));
+            updateSuccessStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForSuccessInLM"),
+                    currFile.getTotalRecords(), currFile.getSuccessRecords(), 0,currFile.getFailedRecords());
 //            fileOperations.moveFile();
         } catch (Exception ex) {
             logger.error("Exception is {}", ex.getMessage());
@@ -196,8 +205,8 @@ public class LMDataSubFeature {
                         outFile.println(record + ","+nok+ "," + dbConfigService.getValue("msgForReasonRecordErrorInLM"));
                         continue;
                     }
-                    if(lmDataRecord[0].length() < 14) {
-                        logger.error("The imei in record {} is less than 14", record);
+                    if(lmDataRecord[0].length() < 14 && lmDataRecord[0].length() >16) {
+                        logger.error("The imei in record {} is less than 14 or greater than 16", record);
                         failureCount++;
                         outFile.println(record + "," +nok+"," + dbConfigService.getValue("msgForReasonIMEIFailInLM"));
                         continue;
@@ -210,7 +219,7 @@ public class LMDataSubFeature {
                         continue;
                     }
 //                    TrcLocalManufacturedDevice trcLocalManufacturedDevice = new TrcLocalManufacturedDevice(lmDataRecord);
-                    String ruleOutput = rules.applyRule(ruleList, trcLocalManufacturerDto.getImei(), gracePeriod, conn);
+                    String ruleOutput = rules.applyRule(ruleList, trcLocalManufacturerDto.getImei(), gracePeriod, conn, "LM");
                     if(ruleOutput.isEmpty() || ruleOutput.isBlank()) {
                         successCount++;
                         outFile.println(record + ","+ok + "," + dbConfigService.getValue("msgForReasonSuccessInLM"));
@@ -302,11 +311,26 @@ public class LMDataSubFeature {
         alertService.raiseAnAlert(alertId, type, fileName, 0);
     }
 
+    void updateFailStatus(WebActionDb webActionDb, TrcDataMgmt trcDataMgmt, String remarks, String alertId,
+                          String type, String fileName,
+                          long totalCount, long addCount, long deleteCount, long failureCount) {
+        webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
+        trcDataMgmtRepository.updateTrcDataMgmtStatus("FAIL", LocalDateTime.now(), remarks,trcDataMgmt.getId(),
+                totalCount, addCount, deleteCount, failureCount);
+        alertService.raiseAnAlert(alertId, type, fileName, 0);
+    }
+
 
     void updateSuccessStatus(WebActionDb webActionDb, TrcDataMgmt trcDataMgmt, String remarks) {
         webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
         trcDataMgmtRepository.updateTrcDataMgmtStatus("DONE", LocalDateTime.now(), remarks,trcDataMgmt.getId());
     }
 
+    void updateSuccessStatus(WebActionDb webActionDb, TrcDataMgmt trcDataMgmt, String remarks, long totalCount,
+                             long addCount, long deleteCount, long failureCount) {
+        webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
+        trcDataMgmtRepository.updateTrcDataMgmtStatus("DONE", LocalDateTime.now(), remarks,trcDataMgmt.getId(),
+                totalCount, addCount, deleteCount, failureCount);
+    }
 
 }

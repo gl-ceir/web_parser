@@ -78,7 +78,7 @@ public class ExceptionSingleAdd implements IRequestTypeAction {
                 logger.info("The entry failed the validation, with reason {}", validateOutput);
                 writer.println("MSISDN,IMSI,IMEI,Reason"); // print header in file
                 writer.println((msisdn == null ? "":msisdn) + "," + (imsi==null? "":imsi) + "," + (imei==null?"":imei) + "," + dbConfigService.getValue(validateOutput));
-                commonFunctions.updateFailStatus(webActionDb, listDataMgmt);
+                commonFunctions.updateFailStatus(webActionDb, listDataMgmt, 1, 0, 1);
                 writer.close();
                 listFileManagementService.saveListManagementEntity(listDataMgmt.getTransactionId(), ListType.EXCEPTIONLIST, FileType.SINGLE,
                         appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/",
@@ -89,7 +89,7 @@ public class ExceptionSingleAdd implements IRequestTypeAction {
             executeProcess(webActionDb, listDataMgmt);
         } catch (Exception ex) {
             logger.error("Exception in validating the entry {} with message {}", listDataMgmt, ex.getMessage());
-            commonFunctions.updateFailStatus(webActionDb, listDataMgmt);
+            commonFunctions.updateFailStatus(webActionDb, listDataMgmt, 1, 0, 1);
         }
     }
 
@@ -106,12 +106,12 @@ public class ExceptionSingleAdd implements IRequestTypeAction {
                     appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/",
                     listDataMgmt.getTransactionId() + ".csv", 1L);
             if(status) {
-                commonFunctions.updateSuccessStatus(webActionDb, listDataMgmt);
-            } else commonFunctions.updateFailStatus(webActionDb, listDataMgmt);
+                commonFunctions.updateSuccessStatus(webActionDb, listDataMgmt, 1, 1, 0);
+            } else commonFunctions.updateFailStatus(webActionDb, listDataMgmt, 1, 0, 1);
         } catch (Exception ex) {
             logger.error("Error while processing the entry for exception list, for request {} and action {}",
                     listDataMgmt.getRequestType(), listDataMgmt.getAction());
-            commonFunctions.updateFailStatus(webActionDb, listDataMgmt);
+            commonFunctions.updateFailStatus(webActionDb, listDataMgmt, 1, 0, 1);
         }
     }
 

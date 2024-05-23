@@ -14,9 +14,9 @@
 	<name>web_parser</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
-		<java.version>11</java.version>
+<!--		<maven.compiler.source>17</maven.compiler.source>-->
+<!--		<maven.compiler.target>8</maven.compiler.target>-->
+		<java.version>17</java.version>
 		<spring-cloud.version>2023.0.0</spring-cloud.version>
 		<spring-shell.version>3.2.2</spring-shell.version>
 	</properties>
@@ -71,10 +71,11 @@
 			<optional>true</optional>
 		</dependency>
 		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
 			<version>8.0.33</version>
 		</dependency>
+
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
@@ -88,9 +89,8 @@
 
 		<dependency>
 			<groupId>com.gl</groupId>
-			<artifactId>Rule_engine</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-<!--			<scope></scope>-->
+			<artifactId>RuleEngine</artifactId>
+			<version>1.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -115,6 +115,11 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+<!--			<dependency>-->
+<!--				<groupId>org.hibernate</groupId>-->
+<!--				<artifactId>hibernate-core</artifactId>-->
+<!--				<version>5.6.15.Final</version>-->
+<!--			</dependency>-->
 <!--			<dependency>-->
 <!--				<groupId>org.springframework.shell</groupId>-->
 <!--				<artifactId>spring-shell-dependencies</artifactId>-->

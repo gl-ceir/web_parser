@@ -16,11 +16,21 @@ public interface TrcDataMgmtRepository extends JpaRepository<TrcDataMgmt, Long> 
 
     @Transactional
     @Modifying
-    @Query("update TrcDataMgmt u set u.status=:status, u.modifiedOn=:modifiedOn, u.remarks= :remarks where u.id=:id")
+    @Query("update TrcDataMgmt u set u.status=:status, u.modifiedOn=:modifiedOn, u.processedRemarks= :processedRemarks where u.id=:id")
     void updateTrcDataMgmtStatus(@Param("status") String status, @Param("modifiedOn")LocalDateTime modifiedOn,
-                                 @Param("remarks") String remarks, @Param("id") long id);
+                                 @Param("processedRemarks") String processedRemarks, @Param("id") long id);
 
     @Query("select u from TrcDataMgmt u where u.status like :status and u.requestType=:requestType order by u.id desc limit 1")
     TrcDataMgmt getFileName(@Param("status") String status, @Param("requestType") String requestType);
 
+    @Transactional
+    @Modifying
+    @Query("update TrcDataMgmt u set u.status=:status, u.modifiedOn=:modifiedOn, u.processedRemarks= :processedRemarks, " +
+            " u.totalCount= :totalCount, u.addCount= :addCount,  u.deleteCount= :deleteCount, u.failureCount= :failureCount " +
+            " where u.id=:id")
+    void updateTrcDataMgmtStatus(@Param("status") String status, @Param("modifiedOn")LocalDateTime modifiedOn,
+                                 @Param("processedRemarks") String processedRemarks, @Param("id") long id,
+                                 @Param("totalCount") long totalCount, @Param("addCount") long addCount,
+                                 @Param("deleteCount") long deleteCount, @Param("failureCount") long failureCount
+                                 );
 }

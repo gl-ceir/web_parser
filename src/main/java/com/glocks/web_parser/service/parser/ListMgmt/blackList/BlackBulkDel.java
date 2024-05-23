@@ -78,16 +78,18 @@ public class BlackBulkDel implements IRequestTypeAction {
             logger.info("File path is {}", filePath);
             if(!fileOperations.checkFileExists(filePath)) {
                 logger.error("File does not exists {}", filePath);
-                alertService.raiseAnAlert("alert6001", "List Mgmt Black List", currentFileName, 0);
+                alertService.raiseAnAlert("alert5701", "List Mgmt Black List", currentFileName, 0);
 //                commonFunctions.updateFailStatus(webActionDb, listDataMgmt);
                 return ;
             }
             if(currFile.getTotalRecords() > Integer.parseInt(sysParamRepository.getValueFromTag("LIST_MGMT_FILE_COUNT"))) {
-                commonFunctions.updateFailStatus(webActionDb, listDataMgmt);
+                commonFunctions.updateFailStatus(webActionDb, listDataMgmt,
+                        currFile.getTotalRecords(), currFile.getSuccessRecords(), currFile.getFailedRecords());
                 return ;
             }
             if(!fileValidation(filePath)) {
-                commonFunctions.updateFailStatus(webActionDb, listDataMgmt);
+                commonFunctions.updateFailStatus(webActionDb, listDataMgmt,
+                        currFile.getTotalRecords(), currFile.getSuccessRecords(), currFile.getFailedRecords());
                 return ;
             }
             logger.info("File is ok will process it now");
@@ -146,13 +148,15 @@ public class BlackBulkDel implements IRequestTypeAction {
                 currFile.setFailedRecords(failedCount);
             } catch (Exception ex) {
                 logger.error("Error while processing the file {}, with error {}", filePath, ex.getMessage());
-                commonFunctions.updateFailStatus(webActionDb, listDataMgmt);
+                commonFunctions.updateFailStatus(webActionDb, listDataMgmt,
+                        currFile.getTotalRecords(), currFile.getSuccessRecords(), currFile.getFailedRecords());
             }
         } catch (Exception ex) {
             logger.error("Error while processing with error {}", ex.getMessage());
         }
         logger.info("File summary is {}", currFile);
-        commonFunctions.updateSuccessStatus(webActionDb, listDataMgmt);
+        commonFunctions.updateSuccessStatus(webActionDb, listDataMgmt,
+                currFile.getTotalRecords(), currFile.getSuccessRecords(), currFile.getFailedRecords());
 
     }
 

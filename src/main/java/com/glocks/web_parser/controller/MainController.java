@@ -47,7 +47,7 @@ public class MainController {
     AtomicInteger isRunning = new AtomicInteger(0);
 
 
-    @Scheduled(cron = "* * * * * *")
+    @Scheduled(cron = "${web.parser.sleep.time}")
     public void listPendingProcessTask() throws InterruptedException {
         // check if vip here or not, if yes then process
         while (true) {
@@ -56,7 +56,7 @@ public class MainController {
                 //     break; // Server is active, no need to keep checking
             } else {
                 logger.info("VIP not found. Sleeping for " + appConfig.getWebParserSleepTime() + " seconds.");
-                sleepForSeconds(appConfig.getWebParserSleepTime());
+                return;
             }
         }
 
@@ -66,7 +66,8 @@ public class MainController {
         }
         else {
             logger.info("Starting the web parser process.");
-            List<WebActionDb> listOfPendingTasks = webActionDbRepository.getListOfPendingTasks(appConfig.getFeatureList());
+            List<WebActionDb> listOfPendingTasks = webActionDbRepository.getListOfPendingTasks(
+                    appConfig.getFeatureList(), appConfig.getWebParserQueryGap());
             logger.info(listOfPendingTasks);
             if (listOfPendingTasks.isEmpty()) {
                 logger.info("No tasks to perform");

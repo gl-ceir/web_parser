@@ -28,4 +28,13 @@ public interface ListDataMgmtRepository extends JpaRepository<ListDataMgmt, Inte
     void updateListDataMgmtStatus(@Param("status") String status, @Param("modifiedOn") LocalDateTime modifiedOn,
                                   @Param("id") long id);
 
+    @Transactional
+    @Modifying
+    @Query("update ListDataMgmt u set u.status=:status, u.modifiedOn=:modifiedOn, u.totalCount=:totalCount, " +
+            "u.successCount=:successCount, u.failureCount=:failureCount where u.id=:id")
+    void updateListDataMgmtStatus(@Param("status") String status, @Param("modifiedOn") LocalDateTime modifiedOn,
+                                  @Param("id") long id, @Param("totalCount") long totalCount,
+                                  @Param("successCount") long successCount,
+                                  @Param("failureCount") long failureCount);
+
 }

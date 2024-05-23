@@ -45,6 +45,13 @@ public class BulkCheckImeiMgmt {
 
     @Column(name="language")
     String language;
+    @Column(name="total_count")
+    long totalCount;
 
+    @Column(name="success_count")
+    long successCount;
+
+    @Column(name="failure_count")
+    long failureCount;
 
 }
