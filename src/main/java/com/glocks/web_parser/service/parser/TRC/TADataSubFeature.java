@@ -232,6 +232,7 @@ public class TADataSubFeature {
                     logger.info("Record length {}", taDataRecord.length);
                     if(taDataRecord.length != 11) {
                         logger.error("The record length is not equal to 11 {}", Arrays.stream(taDataRecord));
+                        failureCount++;
                         continue;
                     }
 

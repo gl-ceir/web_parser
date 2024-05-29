@@ -139,7 +139,7 @@ public class BlockedTacBulkAdd implements IRequestTypeAction {
                         appConfig.getListMgmtFilePath() + "/" + listDataMgmt.getTransactionId() + "/",
                         listDataMgmt.getTransactionId() + ".csv", currFile.getTotalRecords());
                 currFile.setSuccessRecords(successCount);
-                currFile.setSuccessRecords(failedCount);
+                currFile.setFailedRecords(failedCount);
             } catch (Exception ex) {
                 logger.error("Error while processing the file {}, with error {}", filePath, ex.getMessage());
                 commonFunctions.updateFailStatus(webActionDb, listDataMgmt,

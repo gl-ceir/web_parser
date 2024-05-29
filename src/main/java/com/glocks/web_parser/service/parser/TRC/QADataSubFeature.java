@@ -241,6 +241,7 @@ public class QADataSubFeature {
                     logger.info("Record length {}", taDataRecord.length);
                     if(taDataRecord.length != 4) {
                         logger.error("The record length is not equal to 4 {}", Arrays.stream(taDataRecord));
+                        failureCount++;
                         continue;
                     }
 
