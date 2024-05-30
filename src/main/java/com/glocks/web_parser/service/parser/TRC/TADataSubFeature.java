@@ -142,13 +142,16 @@ public class TADataSubFeature {
 //                    transactionId, appConfig.getTaProcessedBaseFilePath() + "/" + transactionId);
             // all done updating the entry to 3 in web action db and calling process file functions
             webActionDbRepository.updateWebActionStatus(3, webActionDb.getId());
-            listFileManagementService.saveListManagementEntity(transactionId, ListType.TADATA, FileType.PROCESSED_FILE, appConfig.getTaBaseFilePath() + "/" +
+            listFileManagementService.saveListManagementEntity(transactionId, ListType.OTHERS, FileType.PROCESSED_FILE,
+                    appConfig.getTaBaseFilePath() + "/" +
                     transactionId +"/", currentFileName+"_sorted",(long) currFile.getTotalRecords());
 
-            listFileManagementService.saveListManagementEntity(transactionId, ListType.TADATA, FileType.PROCESSED_FILE, appConfig.getTaBaseFilePath() + "/" +
+            listFileManagementService.saveListManagementEntity(transactionId, ListType.OTHERS, FileType.PROCESSED_FILE,
+                    appConfig.getTaBaseFilePath() + "/" +
                     transactionId +"/", "trc_data_ta_dump_del_"+date+".txt", 0L);
 
-            listFileManagementService.saveListManagementEntity(transactionId, ListType.TADATA, FileType.PROCESSED_FILE, appConfig.getTaBaseFilePath() + "/" +
+            listFileManagementService.saveListManagementEntity(transactionId, ListType.OTHERS, FileType.PROCESSED_FILE,
+                    appConfig.getTaBaseFilePath() + "/" +
                     transactionId +"/", "trc_data_ta_dump_add_"+date+".txt", 0L);
             executeProcess(webActionDb);
 

@@ -54,20 +54,20 @@ public class SftpFileService {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<SftpFileDto> request = new HttpEntity<SftpFileDto>(sftpFileDto, headers);
-            log.info("Calling URL for Sftp File Request:{}, Url:{}", sftpFileDto, URL);
+            log.info("Calling URL for file copy File Request:{}, Url:{}", sftpFileDto, URL);
             ResponseEntity<String> responseEntity = restTemplate.postForEntity(URL, request, String.class);
-            log.info("Response URL for Sftp File Request:{}, Response:{}", sftpFileDto, responseEntity);
+            log.info("Response URL for file copy File Request:{}, Response:{}", sftpFileDto, responseEntity);
             if(responseEntity.getStatusCode() == HttpStatusCode.valueOf(200)) {
                 copyStatus = CopyStatus.COPIED;
             }
         } catch (Exception e) {
-            log.error("Error while URL for Sftp File Error:{} Request:{}", e.getMessage(), sftpFileDto, e);
+            log.error("Error while URL for file copy File Error:{} Request:{}", e.getMessage(), sftpFileDto, e);
         }
         return copyStatus;
     }
 
     public void sendCopyFileInfo(ListFileManagement listFileManagement) {
-        log.info("Going to call SFTP URL for record:{}", listFileManagement);
+        log.info("Going to call file copy URL for record:{}", listFileManagement);
         SftpDestinationDto destinationDto = new SftpDestinationDto();
         destinationDto.setDestServerName(listFileManagement.getDestinationServer());
         destinationDto.setDestFilePath(listFileManagement.getDestinationPath());
@@ -89,7 +89,7 @@ public class SftpFileService {
     public boolean sendCopyFileInfo(String transactionId, ListType listType, FileType fileType,
                                  String sourceFilePath, String sourceFileName,
                                  Long totalCount, List<String> destinationServers, List<String> destinationFilePath) {
-        log.info("Going to call SFTP URL for file:{}", sourceFileName);
+        log.info("Going to call file copy URL for file:{}", sourceFileName);
         List<SftpDestinationDto> destinationDtos = new ArrayList<>();
         for(int i=0;i<destinationServers.size();i++) {
             SftpDestinationDto destinationDto = new SftpDestinationDto();

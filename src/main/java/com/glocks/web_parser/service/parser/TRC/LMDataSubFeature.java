@@ -118,7 +118,8 @@ public class LMDataSubFeature {
             logger.info(ruleList.toString());
             boolean output = fileRead(currFile, ruleList, writer);
             writer.close();
-            listFileManagementService.saveListManagementEntity(transactionId, ListType.LMDATA, FileType.PROCESSED_FILE, filePath,
+            listFileManagementService.saveListManagementEntity(transactionId, ListType.OTHERS, FileType.PROCESSED_FILE,
+                    appConfig.getLocalManufacturerBaseFilePath() + "/" + transactionId + "/",
                     currentFileName+"_processed",(long) currFile.getTotalRecords());
             if(!output) {
 //                listFileManagementService.saveListManagementEntity(transactionId, ListType.LMDATA, FileType.PROCESSED_FILE,

@@ -150,13 +150,16 @@ public class QADataSubFeature {
             // all done updating the entry to 3 in web action db and calling process file functions
             webActionDbRepository.updateWebActionStatus(3, webActionDb.getId());
             executeProcess(webActionDb);
-            listFileManagementService.saveListManagementEntity(transactionId, ListType.QADATA, FileType.PROCESSED_FILE, appConfig.getQaBaseFilePath() + "/" +
+            listFileManagementService.saveListManagementEntity(transactionId, ListType.OTHERS, FileType.PROCESSED_FILE,
+                    appConfig.getQaBaseFilePath() + "/" +
                             transactionId +"/", currentFileName+"_sorted",(long) currFile.getTotalRecords());
 
-            listFileManagementService.saveListManagementEntity(transactionId, ListType.QADATA, FileType.PROCESSED_FILE, appConfig.getQaBaseFilePath() + "/" +
+            listFileManagementService.saveListManagementEntity(transactionId, ListType.OTHERS, FileType.PROCESSED_FILE,
+                    appConfig.getQaBaseFilePath() + "/" +
                             transactionId +"/", "trc_data_qa_dump_del_"+date+".txt", 0L);
 
-            listFileManagementService.saveListManagementEntity(transactionId, ListType.QADATA, FileType.PROCESSED_FILE, appConfig.getQaBaseFilePath() + "/" +
+            listFileManagementService.saveListManagementEntity(transactionId, ListType.OTHERS, FileType.PROCESSED_FILE,
+                    appConfig.getQaBaseFilePath() + "/" +
                     transactionId +"/", "trc_data_qa_dump_add_"+date+".txt", 0L);
 
         } catch (Exception ex) {

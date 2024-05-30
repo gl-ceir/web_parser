@@ -7,7 +7,8 @@ public enum ListType {
     QADATA,
     TADATA,
     LMDATA,
-    CHECKIMEIBULK;
+    CHECKIMEIBULK,
+    OTHERS;
 
 
 }

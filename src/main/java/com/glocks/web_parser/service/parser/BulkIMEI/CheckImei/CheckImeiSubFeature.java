@@ -181,7 +181,7 @@ public class CheckImeiSubFeature {
             writer.println("IMEI,Status");
             boolean output = fileRead(currFile, ruleList, writer, bulkCheckImeiMgmt);
             writer.close();
-            listFileManagementService.saveListManagementEntity(transactionId, ListType.CHECKIMEIBULK, FileType.BULK,
+            listFileManagementService.saveListManagementEntity(transactionId, ListType.OTHERS, FileType.BULK,
                     appConfig.getBulkCheckImeiFilePath() + "/" + bulkCheckImeiMgmt.getTransactionId() + "/",
                     bulkCheckImeiMgmt.getTransactionId() + ".csv", currFile.getTotalRecords());
             if(!output) {
