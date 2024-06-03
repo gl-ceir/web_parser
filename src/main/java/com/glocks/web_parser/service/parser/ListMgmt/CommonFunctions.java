@@ -70,7 +70,7 @@ public class CommonFunctions {
             if(!imsiEmpty) imsi = imsi.trim();
             if(!imeiEmpty) imei = imei.trim();
             if(!msisdnEmpty) msisdn = msisdn.trim();
-            if(imeiEmpty && imsiEmpty && !msisdnEmpty) {
+            if(imsiEmpty && !msisdnEmpty) {
                imsi = hlrService.popluateImsi(msisdn);
                 if(validation.isEmptyAndNull(imsi)) {
                     logger.error("The entry is failed.");
@@ -110,7 +110,7 @@ public class CommonFunctions {
                 String operatorName = operatorSeriesService.getOperatorName(imsiEmpty, msisdnEmpty, imsi, msisdn);
                 if(filled && type == 1) {
                     listDataMgmt.setImsi(imsi);
-                } else if (filled && type == 1 ) record.setImsi(imsi);
+                } else if (filled && type == 0 ) record.setImsi(imsi);
                 exceptionList = type == 1 ? ExceptionListBuilder.forInsert(listDataMgmt, operatorName) : ExceptionListBuilder.forInsert(listDataMgmt, record, operatorName);
                 logger.info("Entry save in exception list {}",exceptionList);
                 exceptionListRepository.save(exceptionList);
@@ -145,7 +145,7 @@ public class CommonFunctions {
             if(!imsiEmpty) imsi = imsi.trim();
             if(!imeiEmpty) imei = imei.trim();
             if(!msisdnEmpty) msisdn = msisdn.trim();
-            if(imeiEmpty && imsiEmpty && !msisdnEmpty) {
+            if(imsiEmpty && !msisdnEmpty) {
                 imsi = hlrService.popluateImsi(msisdn);
                 if(validation.isEmptyAndNull(imsi)) {
                     logger.error("The entry is failed.");
@@ -218,7 +218,7 @@ public class CommonFunctions {
             if(!imsiEmpty) imsi = imsi.trim();
             if(!imeiEmpty) imei = imei.trim();
             if(!msisdnEmpty) msisdn = msisdn.trim();
-            if(imeiEmpty && imsiEmpty && !msisdnEmpty) {
+            if(imsiEmpty && !msisdnEmpty) {
                 imsi = hlrService.popluateImsi(msisdn);
                 if(validation.isEmptyAndNull(imsi)) {
                     logger.error("The entry is failed.");
@@ -260,7 +260,7 @@ public class CommonFunctions {
                 String operatorName = operatorSeriesService.getOperatorName(imsiEmpty, msisdnEmpty, imsi, msisdn);
                 if(filled && type == 1) {
                     listDataMgmt.setImsi(imsi);
-                } else record.setImsi(imsi);
+                } else if(filled && type == 0) record.setImsi(imsi);
                 blackList = type == 1 ? BlackListBuilder.forInsert(listDataMgmt, operatorName) : BlackListBuilder.forInsert(listDataMgmt, record, operatorName);
 
                 logger.info("Entry save in black list {}",blackList);
@@ -298,7 +298,7 @@ public class CommonFunctions {
             if(!imeiEmpty) imei = imei.trim();
             if(!msisdnEmpty) msisdn = msisdn.trim();
             // check if imsi is populated in case of only msisdn in request.
-            if(imeiEmpty && imsiEmpty && !msisdnEmpty) {
+            if(imsiEmpty && !msisdnEmpty) {
                 imsi = hlrService.popluateImsi(msisdn);
                 if(validation.isEmptyAndNull(imsi)) {
                     logger.error("The entry is failed.");
