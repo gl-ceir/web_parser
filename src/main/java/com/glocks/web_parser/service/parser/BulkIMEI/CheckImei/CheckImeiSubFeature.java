@@ -21,17 +21,19 @@ import com.glocks.web_parser.service.parser.BulkIMEI.UtilFunctions;
 import com.glocks.web_parser.service.rule.Rules;
 import com.glocks.web_parser.service.sms.SmsService;
 import com.glocks.web_parser.validator.Validation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 import static com.glocks.web_parser.constants.BulkCheckImeiConstants.*;
 import static com.glocks.web_parser.constants.ConfigFlag.msgForCompliantBulkImei;
+import static org.springframework.jdbc.datasource.DataSourceUtils.getConnection;
 
 @Service
 public class CheckImeiSubFeature {
@@ -71,7 +73,7 @@ public class CheckImeiSubFeature {
     @Autowired
     SmsService smsService;
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LogManager.getLogger(this.getClass());
 
     public void executeInitProcess(WebActionDb webActionDb, BulkCheckImeiMgmt bulkCheckImeiMgmt) {
         logger.info("Starting the init process for bulk check IMEI for transaction id {}", webActionDb.getTxnId());
@@ -112,7 +114,7 @@ public class CheckImeiSubFeature {
                 return ;
             }
             int bulkImeiCount=Integer.parseInt(sysParamRepository.getValueFromTag("BULK_CHECK_IMEI_COUNT"));
-            if(currFile.getTotalRecords() <= 1 || currFile.getTotalRecords() > bulkImeiCount) {
+            if(currFile.getTotalRecords() < 1 || currFile.getTotalRecords() > bulkImeiCount) {
                 emailDto.setSubject(utilFunctions.replaceString(eirsResponseParamRepository.findValue(featureName,
                         language, numberOfRecordsSubject), bulkImeiCount, transactionId, currentFileName));
                 emailDto.setMessage(utilFunctions.replaceString(eirsResponseParamRepository.findValue(featureName,
@@ -211,13 +213,13 @@ public class CheckImeiSubFeature {
         }
     }
 
-    public boolean fileRead(FileDto file, List<RuleDto> ruleList, PrintWriter outFile, BulkCheckImeiMgmt bulkCheckImeiMgmt) {
+    public boolean fileRead(FileDto file, List<RuleDto> ruleList, PrintWriter outFile, BulkCheckImeiMgmt bulkCheckImeiMgmt) throws SQLException {
         int successCount = 0;
         int failureCount = 0;
         boolean gracePeriod = rules.checkGracePeriod();
-        try(BufferedReader reader = new BufferedReader(new FileReader(file.getFilePath()+"/"+file.getFileName()))
+        try( Connection conn = appDbConfig.springDataSource().getConnection();
+                BufferedReader reader = new BufferedReader(new FileReader(file.getFilePath()+"/"+file.getFileName()))
         ) {
-            Connection conn = appDbConfig.springDataSource().getConnection();
             String record = null;
             reader.readLine(); // skipping the header
             try {

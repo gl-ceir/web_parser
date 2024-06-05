@@ -2,8 +2,8 @@ package com.glocks.web_parser.service.email;
 
 import com.glocks.web_parser.config.AppConfig;
 import com.glocks.web_parser.dto.EmailDto;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -31,7 +31,7 @@ public class EmailService {
 
     @Autowired
     AppConfig appConfig;
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LogManager.getLogger(this.getClass());
     private RestTemplate restTemplate = null;
     public void callEmailApi(EmailDto emailDto) {
         logger.info("Setting for calling the API");

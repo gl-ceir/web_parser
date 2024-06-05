@@ -23,8 +23,8 @@ public class FeatureList {
     public Map<String, FeatureInterface> getFeatures() {
         return Map.of("TRCManagement", trcFeature,
                 "ListManagement", listMgmtFeature,
-                "BulkIMEICheck", bulkImeiFeature,
-                "Recovery", new RecoveryFeature()
+                "BulkIMEICheck", bulkImeiFeature
+//                "Recovery", new RecoveryFeature()
         );
     }
 }

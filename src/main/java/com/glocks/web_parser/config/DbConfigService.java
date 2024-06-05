@@ -8,8 +8,8 @@ import com.glocks.web_parser.model.app.SysParam;
 import com.glocks.web_parser.repository.app.EirsResponseParamRepository;
 import com.glocks.web_parser.repository.app.SysParamRepository;
 import jakarta.annotation.PostConstruct;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class DbConfigService {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LogManager.getLogger(this.getClass());
     @Autowired
     EirsResponseParamRepository eirsResponseParamRepository;
 

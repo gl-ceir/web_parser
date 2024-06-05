@@ -2,8 +2,8 @@ package com.glocks.web_parser.alert;
 
 import com.glocks.web_parser.config.AppConfig;
 import com.glocks.web_parser.dto.AlertDto;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -16,7 +16,7 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 public class AlertService implements IAlert{
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LogManager.getLogger(this.getClass());
     @Autowired
     AppConfig appConfig;
 

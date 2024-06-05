@@ -16,9 +16,10 @@ import com.glocks.web_parser.service.fileCopy.ListFileManagementService;
 import com.glocks.web_parser.service.fileOperations.FileOperations;
 import com.glocks.web_parser.service.operatorSeries.OperatorSeriesService;
 import com.glocks.web_parser.service.parser.ListMgmt.CommonFunctions;
+import com.glocks.web_parser.service.parser.ListMgmt.utils.BlockedTacUtils;
 import com.glocks.web_parser.validator.Validation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +32,7 @@ import java.io.PrintWriter;
 @Service
 public class BlockedTacBulkDel implements IRequestTypeAction {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LogManager.getLogger(this.getClass());
 
     @Autowired
     WebActionDbRepository webActionDbRepository;
@@ -51,6 +52,8 @@ public class BlockedTacBulkDel implements IRequestTypeAction {
     DbConfigService dbConfigService;
     @Autowired
     AlertService alertService;
+    @Autowired
+    BlockedTacUtils blockedTacUtils;
 
     @Override
     public  void executeInitProcess(WebActionDb webActionDb, ListDataMgmt listDataMgmt) {
@@ -129,7 +132,7 @@ public class BlockedTacBulkDel implements IRequestTypeAction {
                         failedCount++;
                         continue;
                     }
-                    boolean status = commonFunctions.processBlockedTacDelEntry(listDataMgmt, blockedTacDto, 0, writer);
+                    boolean status = blockedTacUtils.processBlockedTacDelEntry(listDataMgmt, blockedTacDto, 0, writer);
                     if(status) successCount++;
                     else failedCount++;
                 }

@@ -5,8 +5,8 @@ import com.glocks.web_parser.config.AppConfig;
 import com.glocks.web_parser.model.app.OperatorSeries;
 import com.glocks.web_parser.repository.app.OperatorSeriesRepository;
 import jakarta.annotation.PostConstruct;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +16,7 @@ import java.util.List;
 @Service
 public class OperatorSeriesService {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LogManager.getLogger(this.getClass());
 
     @Autowired
     AppConfig appConfig;

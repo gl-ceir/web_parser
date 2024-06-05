@@ -14,9 +14,10 @@ import com.glocks.web_parser.service.fileCopy.ListFileManagementService;
 import com.glocks.web_parser.service.fileOperations.FileOperations;
 import com.glocks.web_parser.service.operatorSeries.OperatorSeriesService;
 import com.glocks.web_parser.service.parser.ListMgmt.CommonFunctions;
+import com.glocks.web_parser.service.parser.ListMgmt.utils.ExceptionListUtils;
 import com.glocks.web_parser.validator.Validation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +27,7 @@ import java.io.*;
 @Service
 public class ExceptionBulkAdd  implements IRequestTypeAction {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LogManager.getLogger(this.getClass());
 
     @Autowired
     WebActionDbRepository webActionDbRepository;
@@ -48,6 +49,8 @@ public class ExceptionBulkAdd  implements IRequestTypeAction {
     CommonFunctions commonFunctions;
     @Autowired
     AlertService alertService;
+    @Autowired
+    ExceptionListUtils exceptionListUtils;
 
     @Override
     public  void executeInitProcess(WebActionDb webActionDb, ListDataMgmt listDataMgmt) {
@@ -132,8 +135,8 @@ public class ExceptionBulkAdd  implements IRequestTypeAction {
                         failedCount++;
                         continue;
                     }
-                    boolean status = commonFunctions.processExceptionSingleAddEntry(listDataMgmt, listMgmtDto, 0, writer);
-                            if(status) successCount++;
+                    boolean status = exceptionListUtils.processExceptionSingleAddEntry(listDataMgmt, listMgmtDto, 0, writer);
+                    if(status) successCount++;
                     else failedCount++;
                 }
                 writer.close();

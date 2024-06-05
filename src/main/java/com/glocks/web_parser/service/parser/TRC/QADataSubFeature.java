@@ -16,8 +16,8 @@ import com.glocks.web_parser.repository.app.TrcQualifiedAgentsDataRepository;
 import com.glocks.web_parser.repository.app.WebActionDbRepository;
 import com.glocks.web_parser.service.fileCopy.ListFileManagementService;
 import com.glocks.web_parser.service.fileOperations.FileOperations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +31,7 @@ import static com.glocks.web_parser.constants.Constants.done;
 @Service
 public class QADataSubFeature {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LogManager.getLogger(this.getClass());
 
     @Autowired
     AppConfig appConfig;

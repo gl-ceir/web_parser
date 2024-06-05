@@ -2,8 +2,8 @@ package com.glocks.web_parser.dto;
 
 
 import lombok.Data;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +21,7 @@ public class FileDto {
     long successRecords;
     long failedRecords;
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LogManager.getLogger(this.getClass());
 
     public FileDto(String fileName, String filePath, long totalRecords, long successRecords, long failedRecords) {
         this.fileName = fileName;

@@ -6,8 +6,8 @@ import com.glocks.web_parser.constants.FileType;
 import com.glocks.web_parser.constants.ListType;
 import com.glocks.web_parser.model.app.ListFileManagement;
 import com.glocks.web_parser.repository.app.ListFileManagementRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +17,7 @@ import java.util.List;
 
 @Service
 public class ListFileManagementService {
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private final Logger log = LogManager.getLogger(this.getClass());
 
     @Autowired
     private ListFileManagementRepository listFileManagementRepository;

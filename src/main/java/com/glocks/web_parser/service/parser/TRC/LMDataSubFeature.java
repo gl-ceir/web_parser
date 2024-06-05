@@ -17,8 +17,8 @@ import com.glocks.web_parser.repository.app.*;
 import com.glocks.web_parser.service.fileCopy.ListFileManagementService;
 import com.glocks.web_parser.service.fileOperations.FileOperations;
 import com.glocks.web_parser.service.rule.Rules;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +31,7 @@ import java.util.Map;
 
 @Service
 public class LMDataSubFeature {
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LogManager.getLogger(this.getClass());
 
     @Autowired
     AppConfig appConfig;
@@ -147,7 +147,7 @@ public class LMDataSubFeature {
             FileDto currFile = new FileDto(currentFileName, appConfig.getLocalManufacturerBaseFilePath() + "/" + trcDataMgmt.getTransactionId());
             processFile(currFile);
             logger.info("File processed. {}", currFile);
-            updateSuccessStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForSuccessInLM"));
+//            updateSuccessStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForSuccessInLM"));
             updateSuccessStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForSuccessInLM"),
                     currFile.getTotalRecords(), currFile.getSuccessRecords(), 0,currFile.getFailedRecords());
 //            fileOperations.moveFile();

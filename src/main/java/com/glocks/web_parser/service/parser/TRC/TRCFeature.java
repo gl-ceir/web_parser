@@ -2,8 +2,8 @@ package com.glocks.web_parser.service.parser.TRC;
 
 import com.glocks.web_parser.model.app.WebActionDb;
 import com.glocks.web_parser.service.parser.FeatureInterface;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +16,7 @@ public class TRCFeature implements FeatureInterface {
     QADataSubFeature qaDataSubFeature;
     @Autowired
     LMDataSubFeature lmDataSubFeature;
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LogManager.getLogger(this.getClass());
 
     @Override
     public void executeInit(WebActionDb wb) {

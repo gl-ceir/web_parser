@@ -1,8 +1,8 @@
 package com.glocks.web_parser.service.fileOperations;
 
 import com.glocks.web_parser.dto.FileDto;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -13,7 +13,7 @@ import java.nio.file.Paths;
 
 @Service
 public class FileOperations implements IFileOperations{
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LogManager.getLogger(this.getClass());
     @Override
     public boolean checkFileExists(String fileName) {
         File file = new File(fileName);

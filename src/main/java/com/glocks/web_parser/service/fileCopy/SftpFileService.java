@@ -10,8 +10,8 @@ import com.glocks.web_parser.dto.SftpFileDto;
 import com.glocks.web_parser.model.app.ListFileManagement;
 
 import com.glocks.web_parser.repository.app.ListFileManagementRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.http.*;
@@ -27,7 +27,7 @@ import static com.glocks.web_parser.constants.Constants.applicationName;
 @Service
 public class SftpFileService {
 
-    private final Logger log = LoggerFactory.getLogger(this.getClass());
+    private final Logger log = LogManager.getLogger(this.getClass());
 
 
 

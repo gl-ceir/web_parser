@@ -1,8 +1,8 @@
 package com.glocks.web_parser.config;
 
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
@@ -12,7 +12,7 @@ import java.sql.SQLException;
 
 @Component
 public class DbConnectionChecker {
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LogManager.getLogger(this.getClass());
 
     public void checkAppDbConnection(@Qualifier("springDataSource") DataSource dataSource) {
         checkDbConnection(dataSource, "app");

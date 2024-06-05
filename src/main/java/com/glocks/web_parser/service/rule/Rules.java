@@ -6,8 +6,8 @@ import com.gl.rule_engine.RuleInfo;
 import com.glocks.web_parser.config.AppDbConfig;
 import com.glocks.web_parser.dto.RuleDto;
 import com.glocks.web_parser.model.app.TrcLocalManufacturedDevice;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.glocks.web_parser.repository.app.SysParamRepository;
@@ -25,7 +25,7 @@ import java.util.List;
 @Service
 public class Rules {
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LogManager.getLogger(this.getClass());
     @Autowired
     AppDbConfig appDbConfig;
 
