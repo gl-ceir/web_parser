@@ -109,7 +109,7 @@ public class CheckImeiSubFeature {
             logger.info("File path is {}", filePath);
             if(!fileOperations.checkFileExists(filePath)) {
                 logger.error("File does not exists {}", filePath);
-                alertService.raiseAnAlert("alert1109", "Bulk Check IMEI", currentFileName + " with transaction id " + transactionId, 0);
+                alertService.raiseAnAlert(transactionId,"alert1109", "Bulk Check IMEI", currentFileName + " with transaction id " + transactionId, 0);
 //                utilFunctions.updateFailStatus(webActionDb, bulkCheckImeiMgmt);
                 return ;
             }
@@ -228,7 +228,7 @@ public class CheckImeiSubFeature {
 
                     String[] bulkCheckImeiRecord = record.split(",", -1);
                     BulkCheckImeiDto bulkCheckImeiDto = new BulkCheckImeiDto(bulkCheckImeiRecord);
-                    String ruleOutput = rules.applyRule(ruleList, bulkCheckImeiDto.getImei(), gracePeriod, conn, "BU");
+                    String ruleOutput = rules.applyRule(ruleList, bulkCheckImeiDto.getImei().trim(), gracePeriod, conn, "BU");
                     CheckImeiReqDetail checkImeiReqDetail = CheckImeiReqDetailBuilder.forInsert(
                             bulkCheckImeiDto.getImei(), bulkCheckImeiMgmt);
                     if(ruleOutput.isEmpty() || ruleOutput.isBlank()) {
@@ -272,7 +272,7 @@ public class CheckImeiSubFeature {
             String record;
             record = reader.readLine();
             String[] firstHeader = record.split(",", -1);
-            if(firstHeader.length != 1 ||  !firstHeader[0].equalsIgnoreCase("IMEI")) { // validating the header
+            if(firstHeader.length != 1 ||  !firstHeader[0].trim().equalsIgnoreCase("IMEI")) { // validating the header
                 logger.error("The record {} is not in correct format", record);
                 return false;
             }
