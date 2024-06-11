@@ -318,7 +318,7 @@ public class LMDataSubFeature {
         webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
         trcDataMgmtRepository.updateTrcDataMgmtStatus("FAIL", LocalDateTime.now(), remarks,trcDataMgmt.getId(),
                 totalCount, addCount, deleteCount, failureCount);
-        alertService.raiseAnAlert(alertId, type, fileName, 0);
+        alertService.raiseAnAlert(alertId, type, fileName + " with transaction id " + webActionDb.getTxnId(), 0);
     }
 
 

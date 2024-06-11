@@ -109,7 +109,7 @@ public class CheckImeiSubFeature {
             logger.info("File path is {}", filePath);
             if(!fileOperations.checkFileExists(filePath)) {
                 logger.error("File does not exists {}", filePath);
-                alertService.raiseAnAlert("alert1109", "Bulk Check IMEI", currentFileName, 0);
+                alertService.raiseAnAlert("alert1109", "Bulk Check IMEI", currentFileName + " with transaction id " + transactionId, 0);
 //                utilFunctions.updateFailStatus(webActionDb, bulkCheckImeiMgmt);
                 return ;
             }
@@ -285,7 +285,7 @@ public class CheckImeiSubFeature {
                 }
             }
             reader.close();
-            logger.error("The file is validated and is matches the required format");
+            logger.info("The file is validated and is matches the required format");
             return true;
         } catch (Exception ex) {
             logger.error("Exception while reading the file {} {}", fileName, ex.getMessage());

@@ -10,6 +10,7 @@ import com.glocks.web_parser.dto.SftpFileDto;
 import com.glocks.web_parser.model.app.ListFileManagement;
 
 import com.glocks.web_parser.repository.app.ListFileManagementRepository;
+import jakarta.annotation.PostConstruct;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,8 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -45,7 +48,14 @@ public class SftpFileService {
 
     private String serverName = null;
 
-
+    @PostConstruct
+    public void init() {
+        try {
+            serverName = InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
+    }
     private CopyStatus callUrl(SftpFileDto sftpFileDto, String operator) {
         RestTemplate restTemplate = new RestTemplate();
         CopyStatus copyStatus = CopyStatus.NEW;
