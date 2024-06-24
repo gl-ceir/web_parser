@@ -82,6 +82,12 @@ public class ExceptionListUtils {
             else {
                 logger.info("The entry for msisdn {}, imsi {} and imei {} does not exist.", msisdn, imsi, imei);
                 String operatorName = operatorSeriesService.getOperatorName(imsiEmpty, msisdnEmpty, imsi, msisdn);
+                if(validation.isEmptyAndNull(operatorName) && (!imsiEmpty || !msisdnEmpty)) { // operator name not found if imsi or msisdn is present.
+                    logger.info("The operator name from operator series is not found.");
+                    logger.error("The entry is failed.");
+                    writer.println((msisdnEmpty ? "":msisdn)+","+(imsiEmpty ? "":imsi)+","+(imeiEmpty ? "":imei )+","+dbConfigService.getValue("msgForEntryFailedInBlackList"));
+                    return false;
+                }
                 if(filled && type == 1) {
                     listDataMgmt.setImsi(imsi);
                 } else if (filled && type == 0) record.setImsi(imsi);
@@ -139,7 +145,7 @@ public class ExceptionListUtils {
                     logger.error("The entry is failed.");
                     writer.println((msisdnEmpty ? "":msisdn)+","+(imsiEmpty ? "":imsi)+","+(imeiEmpty ? "":imei )+","+
                             dbConfigService.getValue("msgForEntryFailedInExceptionList"));
-                    return false;
+//                    return false;
                 }
                 filled = true;
                 imsiEmpty = false;
