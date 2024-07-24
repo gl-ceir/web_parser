@@ -9,9 +9,14 @@ import java.util.regex.Pattern;
 public class Validation {
 
     Pattern onlyNumberPattern = Pattern.compile("^[0-9]*$");
+    Pattern onlyAlphaNumberPattern = Pattern.compile("^[a-zA-Z0-9_]*$");
 
     public boolean isNumeric(String number) {
         return onlyNumberPattern.matcher(number.trim()).matches();
+    }
+
+    public boolean isAlphaNumeric(String number) {
+        return onlyAlphaNumberPattern.matcher(number.trim()).matches();
     }
 
     public boolean isLengthEqual(String number, int length) {

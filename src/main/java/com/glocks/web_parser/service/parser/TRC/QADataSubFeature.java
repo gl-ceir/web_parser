@@ -242,7 +242,7 @@ public class QADataSubFeature {
 
                     String[] taDataRecord = record.split(appConfig.getTrcQaFileSeparator(), -1);
                     logger.info("Record length {}", taDataRecord.length);
-                    if(taDataRecord.length != 4) {
+                    if(taDataRecord.length != 6) {
                         logger.error("The record length is not equal to 4 {}", Arrays.stream(taDataRecord));
                         failureCount++;
                         continue;

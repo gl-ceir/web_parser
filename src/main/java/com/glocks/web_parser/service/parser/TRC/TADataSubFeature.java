@@ -233,7 +233,7 @@ public class TADataSubFeature {
 
                     String[] taDataRecord = record.split(appConfig.getTrcTaFileSeparator(), -1);
                     logger.info("Record length {}", taDataRecord.length);
-                    if(taDataRecord.length != 11) {
+                    if(taDataRecord.length != 10) {
                         logger.error("The record length is not equal to 11 {}", Arrays.stream(taDataRecord));
                         failureCount++;
                         continue;

@@ -67,10 +67,10 @@ public class CommonFunctions {
             return ConfigFlag.msgForNullIMEIIMSIMSISDNInList.name();
         }
         if(!imeiEmpty) {
-            if(validation.isLengthLess(imei, 14) || validation.isLengthMore(imei, 16))  {
+            if( validation.isLengthMore(imei, 16))  {  //validation.isLengthLess(imei, 14) ||  //2307
                 return ConfigFlag.msgForLengthValidationIMEIInList.name();
             }
-            if(!validation.isNumeric(imei)) {
+            if(!validation.isAlphaNumeric(imei)) {
                 return ConfigFlag.msgForNonNumericIMEIInList.name();
             }
         }
