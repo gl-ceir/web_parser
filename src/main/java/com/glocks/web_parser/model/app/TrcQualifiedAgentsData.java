@@ -6,8 +6,9 @@ import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
+import java.time.format.DateTimeFormatter;
 
 @Data
 @Entity
@@ -45,7 +46,7 @@ public class TrcQualifiedAgentsData {
     String email;
 
     @Column(name = "expiry_date")
-    LocalDateTime expiryDate;
+    String expiryDate;
 
 
     public TrcQualifiedAgentsData(String[] taDataRecord) {
@@ -54,9 +55,13 @@ public class TrcQualifiedAgentsData {
         this.companyId = taDataRecord[2].trim();
         this.phoneNumber = taDataRecord[3].trim();
         this.email = taDataRecord[4].trim();
-        this.expiryDate = LocalDateTime.parse(taDataRecord[5].trim());
+        this.expiryDate = stringToDate(taDataRecord[5].trim());
     }
 
+    public String stringToDate(String inputDate) {
+        return LocalDate.parse(inputDate, DateTimeFormatter.ofPattern("dd-MMM-yy"))
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    }
     public TrcQualifiedAgentsData() {
 
     }

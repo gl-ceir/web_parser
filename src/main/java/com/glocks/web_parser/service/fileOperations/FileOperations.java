@@ -158,19 +158,22 @@ public class FileOperations implements IFileOperations{
             if(exitStatus == 0 ) {
                 if(type == 0) 
                     logger.info("The delete delta file creation successful for file {} ", currentFile);
-                else logger.info("The insert delta file creation successful for file {} ", currentFile);
+                else
+                    logger.info("The insert delta file creation successful for file {} ", currentFile);
                 return false;
             }
             if(type == 0)
-                logger.error("he delete delta file creation for file {} failed due to reason {}", currentFile, process.exitValue());
-            else logger.error("The insert delta file creation for file {} failed due to reason {}", currentFile, process.getErrorStream().toString());
+                logger.error(" delete delta file creation for file {} failed due to reason {}", currentFile, process.exitValue());
+            else
+                logger.error("The insert delta file creation for file {} failed due to reason {}", currentFile, process.getErrorStream().toString());
             return true;
 
         } catch (Exception ex) {
             logger.error(String.valueOf(ex));
             if(type == 0) 
                 logger.error("The delete delta file creation for file {} failed due to reason {}", currentFile, ex.getMessage());
-            else logger.error("The insert delta file creation for file {} failed due to reason {}", currentFile, ex.getMessage());
+            else
+                logger.error("The insert delta file creation for file {} failed due to reason {}", currentFile, ex.getMessage());
             return true;
         }
     }

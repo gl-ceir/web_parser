@@ -83,14 +83,13 @@ public class QADataSubFeature {
                 return ;
             }
 
-            logger.info("{} {}",appConfig.getQaBaseFilePath(), currentFileName);
+            logger.info("File Name - {} {}",appConfig.getQaBaseFilePath(), currentFileName);
             FileDto currFile = new FileDto(currentFileName, appConfig.getQaBaseFilePath()+"/"+trcDataMgmt.getTransactionId());
-
-
 
             logger.info("File {} exists on the path {}", currentFileName,
                     appConfig.getQaBaseFilePath() + "/" + transactionId);
             if(!fileValidation(filePath)) {
+                logger.error("Header validation failed");
                 updateFailStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForDataFormatErrorInQA"),
                         "alert6002", "QA", currentFileName, currFile.getTotalRecords(), 0, 0, 0);
 //                fileOperations.moveFile(currentFileName, currentFileName, appConfig.getQaBaseFilePath() + "/" +
@@ -125,7 +124,7 @@ public class QADataSubFeature {
                         previousTrcDataMgmt.getTransactionId() +"/" + previousTrcDataMgmt.getFileName() + "_sorted";
 
                 if(!fileOperations.checkFileExists(previousProcessedFilePath)) {
-                    logger.error("No previous file exists for QA data.");
+                    logger.error("No previous file exists on server, but mentioned in database for QA data. File Name {}",previousProcessedFilePath);
                     updateFailStatus(webActionDb, trcDataMgmt,
                             dbConfigService.getValue("msgForRemarksForInternalErrorInQA"),
                             "alert6001", "QA", previousTrcDataMgmt.getFileName(), currFile.getTotalRecords(), 0, 0, 0);
@@ -239,11 +238,10 @@ public class QADataSubFeature {
                     if (record.isEmpty()) {
                         continue;
                     }
-
                     String[] taDataRecord = record.split(appConfig.getTrcQaFileSeparator(), -1);
                     logger.info("Record length {}", taDataRecord.length);
                     if(taDataRecord.length != 6) {
-                        logger.error("The record length is not equal to 4 {}", Arrays.stream(taDataRecord));
+                        logger.error("The record length is not equal to 6 {}", Arrays.stream(taDataRecord));
                         failureCount++;
                         continue;
                     }
@@ -326,14 +324,16 @@ public class QADataSubFeature {
         try(BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String headers = reader.readLine();
             String[] header = headers.split(appConfig.getTrcQaFileSeparator(), -1);
-            if(header.length != 4) {
+            if(header.length != 6) {
                 return false;
             }
             TrcQaFileDto trcQaFileDto = new TrcQaFileDto(header);
-            if (trcQaFileDto.getNo().trim().equalsIgnoreCase("no.") &&
+            if (trcQaFileDto.getNo().trim().equalsIgnoreCase("no") &&
                     trcQaFileDto.getCompanyName().trim().equalsIgnoreCase("company name") &&
+                    trcQaFileDto.getCompanyId().trim().equalsIgnoreCase("company id") &&
                     trcQaFileDto.getPhoneNumber().trim().equalsIgnoreCase("phone number") &&
-                    trcQaFileDto.getEmail().trim().equalsIgnoreCase("email")
+                    trcQaFileDto.getEmail().trim().equalsIgnoreCase("email") &&
+               trcQaFileDto.getExpiryDate().trim().equalsIgnoreCase("expiry date")
             ) {
                 return true;
             }
