@@ -85,9 +85,9 @@ public class TADataSubFeature {
 
             logger.info("{} {}",appConfig.getTaBaseFilePath(), currentFileName);
             FileDto currFile = new FileDto(currentFileName, appConfig.getTaBaseFilePath()+"/"+trcDataMgmt.getTransactionId());
-            logger.info("File {} exists on the path {}", currentFileName,
-                    appConfig.getTaBaseFilePath() + "/" + transactionId);
+            logger.info("File {} exists on the path {}", currentFileName, appConfig.getTaBaseFilePath() + "/" + transactionId);
             if(!fileValidation(filePath)) {
+                logger.info("File Header validation Failed");
                 updateFailStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForDataFormatErrorInTA"),
                         "alert6002", "TA", currentFileName, currFile.getTotalRecords(), 0, 0, 0);
 //                fileOperations.moveFile(currentFileName, currentFileName, appConfig.getTaBaseFilePath() + "/" +
@@ -97,7 +97,7 @@ public class TADataSubFeature {
             // pick the last successfully processed file
             TrcDataMgmt previousTrcDataMgmt = trcDataMgmtRepository.getFileName(done, "TA");
             String sortedFilePath = appConfig.getTaBaseFilePath() + "/" + transactionId + "/" +currentFileName+"_sorted";
-            logger.info("Sorted file is {}" ,sortedFilePath );
+            logger.info("Fetched Last FileName With Done status. Also Sorted file is {}", sortedFilePath);
             // sort the current file
             if(!fileOperations.sortFile(filePath, sortedFilePath)) {
                 alertService.raiseAnAlert(transactionId,"alert6003", "while sorting file for TRC TA", currentFileName, 0);
@@ -112,12 +112,11 @@ public class TADataSubFeature {
                     alertService.raiseAnAlert(transactionId,"alert6003", "while creating diff file for TRC TA", currentFileName, 0);
                     return ;
                 }
-            }
-            else {
+            } else {
                 // check if previous file exists or not....
                 String previousProcessedFilePath = appConfig.getTaBaseFilePath() + "/" +
                         previousTrcDataMgmt.getTransactionId() +"/" + previousTrcDataMgmt.getFileName() + "_sorted";
-
+                logger.info("Previous file name - . Checking if that file exists. {}", previousProcessedFilePath);
                 if(!fileOperations.checkFileExists(previousProcessedFilePath)) {
                     logger.error("No previous file exists for TA data.");
                     updateFailStatus(webActionDb, trcDataMgmt, dbConfigService.getValue("msgForRemarksForInternalErrorInTA"),
@@ -127,12 +126,12 @@ public class TADataSubFeature {
                 // create diff
 
                 if(fileOperations.createDiffFiles(sortedFilePath, previousProcessedFilePath, deltaDeleteFile, 0)) {
-                    alertService.raiseAnAlert(transactionId,"alert6003", "while creating diff file for TRC TA", currentFileName, 0);
+                    alertService.raiseAnAlert(transactionId,"alert6003", "while creating diff file for TRC TA For Type 0", currentFileName, 0);
                     return ;
                 }
 
                 if(fileOperations.createDiffFiles(sortedFilePath, previousProcessedFilePath, deltaAddFile, 1)) {
-                    alertService.raiseAnAlert(transactionId,"alert6003", "while creating diff file for TRC TA", currentFileName, 0);
+                    alertService.raiseAnAlert(transactionId,"alert6003", "while creating diff file for TRC TA For Type 1", currentFileName, 0);
                     return ;
                 }
                 logger.info("Diff file creation successful");
@@ -233,8 +232,8 @@ public class TADataSubFeature {
 
                     String[] taDataRecord = record.split(appConfig.getTrcTaFileSeparator(), -1);
                     logger.info("Record length {}", taDataRecord.length);
-                    if(taDataRecord.length != 11) {
-                        logger.error("The record length is not equal to 11 {}", Arrays.stream(taDataRecord));
+                    if(taDataRecord.length != 10) {
+                        logger.error("The record length is not equal to 10 {}", Arrays.stream(taDataRecord));
                         failureCount++;
                         continue;
                     }
@@ -319,7 +318,7 @@ public class TADataSubFeature {
         try(BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String headers = reader.readLine();
             String[] header = headers.split(appConfig.getTrcTaFileSeparator(), -1);
-            if(header.length != 11) {
+            if(header.length != 10) {
                 return false;
             }
             TrcTaFileDto trcTaFileDto = new TrcTaFileDto(header);
@@ -327,13 +326,12 @@ public class TADataSubFeature {
                     trcTaFileDto.getCompany().trim().equalsIgnoreCase("company") &&
                     trcTaFileDto.getTrademark().trim().equalsIgnoreCase("trademark") &&
                     trcTaFileDto.getProductName().trim().equalsIgnoreCase("product name") &&
-                    trcTaFileDto.getModelName().trim().equalsIgnoreCase("model") &&
-                    trcTaFileDto.getCountry().trim().equalsIgnoreCase("country") &&
-                    trcTaFileDto.getTxFrequency().trim().equalsIgnoreCase("tx frequency") &&
-                    trcTaFileDto.getRxFrequency().trim().equalsIgnoreCase("rx frequency") &&
+                    trcTaFileDto.getModel().trim().equalsIgnoreCase("model") &&
+                    trcTaFileDto.getCountryOfManufacture().trim().equalsIgnoreCase("Country Of Manufacture") &&
+                    trcTaFileDto.getCompanyId().trim().equalsIgnoreCase("Company Id") &&
+                    trcTaFileDto.getCommercialName().trim().equalsIgnoreCase("Commercial Name") &&
                     trcTaFileDto.getTrcIdentifier().trim().equalsIgnoreCase("trc identifier") &&
-                    trcTaFileDto.getTypeOfEquipment().trim().equalsIgnoreCase("type of equipment") &&
-                    trcTaFileDto.getApprovalDate().trim().equalsIgnoreCase("approval date")
+                    trcTaFileDto.getApprovedDate().trim().equalsIgnoreCase("approved date")
             ) {
                 return true;
             }

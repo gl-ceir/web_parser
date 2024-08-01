@@ -6,7 +6,9 @@ import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Data
 @Entity
@@ -34,20 +36,32 @@ public class TrcQualifiedAgentsData {
     @Column(name="company_name")
     String companyName;
 
+    @Column(name = "company_id")
+    String companyId;
+
     @Column(name="phone_number")
     String phoneNumber;
 
     @Column(name="email")
     String email;
 
+    @Column(name = "expiry_date")
+    String expiryDate;
+
 
     public TrcQualifiedAgentsData(String[] taDataRecord) {
         this.no= Integer.parseInt(taDataRecord[0].trim());
         this.companyName=taDataRecord[1].trim();
-        this.phoneNumber=taDataRecord[2].trim();
-        this.email=taDataRecord[3].trim();
+        this.companyId = taDataRecord[2].trim();
+        this.phoneNumber = taDataRecord[3].trim();
+        this.email = taDataRecord[4].trim();
+        this.expiryDate = stringToDate(taDataRecord[5].trim());
     }
 
+    public String stringToDate(String inputDate) {
+        return LocalDate.parse(inputDate, DateTimeFormatter.ofPattern("dd-MMM-yy"))
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    }
     public TrcQualifiedAgentsData() {
 
     }
