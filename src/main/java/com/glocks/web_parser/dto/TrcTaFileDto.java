@@ -16,7 +16,7 @@ public class TrcTaFileDto {
     String commercialName;
     String trcIdentifier;
     String model;
-    String approvalDate;
+    String approvedDate;
 
 
     public TrcTaFileDto(String[] taDataRecord) {
@@ -29,6 +29,6 @@ public class TrcTaFileDto {
         this.model = taDataRecord[6].trim();
         this.countryOfManufacture = taDataRecord[7].trim();
         this.trcIdentifier = taDataRecord[8].trim();
-        this.approvalDate = taDataRecord[9].trim();
+        this.approvedDate = taDataRecord[9].trim();
     }
 }

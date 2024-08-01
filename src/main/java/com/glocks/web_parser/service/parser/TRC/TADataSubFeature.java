@@ -331,7 +331,7 @@ public class TADataSubFeature {
                     trcTaFileDto.getCompanyId().trim().equalsIgnoreCase("Company Id") &&
                     trcTaFileDto.getCommercialName().trim().equalsIgnoreCase("Commercial Name") &&
                     trcTaFileDto.getTrcIdentifier().trim().equalsIgnoreCase("trc identifier") &&
-                    trcTaFileDto.getApprovalDate().trim().equalsIgnoreCase("approval date")
+                    trcTaFileDto.getApprovedDate().trim().equalsIgnoreCase("approved date")
             ) {
                 return true;
             }

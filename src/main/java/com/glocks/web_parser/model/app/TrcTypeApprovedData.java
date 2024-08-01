@@ -55,8 +55,8 @@ public class TrcTypeApprovedData {
     @Column(name="trc_identifier")
     String trcIdentifier;
 
-    @Column(name="approval_date")
-    String approvalDate;
+    @Column(name="approved_date")
+    String approvedDate;
 
 
     public TrcTypeApprovedData(String[] taDataRecord) {
@@ -69,7 +69,7 @@ public class TrcTypeApprovedData {
         this.model = taDataRecord[6].trim();
         this.countryOfManufacture = taDataRecord[7].trim();
         this.trcIdentifier=taDataRecord[8].trim();
-        this.approvalDate = taDataRecord[9].trim();
+        this.approvedDate = taDataRecord[9].trim();
     }
 
     public TrcTypeApprovedData() {
