@@ -30,7 +30,7 @@ public class OperatorSeriesService {
 
         // populate the hash map of operator list
         List<OperatorSeries> allOperatorSeries = operatorSeriesRepository.findAll();
-        logger.info("All the entries of operator Series {}", allOperatorSeries);
+        logger.debug("All the entries of operator Series {}", allOperatorSeries);
         operatorSeriesHash = new HashMap<String, OperatorSeries>();
         for(OperatorSeries operatorSeries: allOperatorSeries) {
             int j = operatorSeries.getSeriesStart();
@@ -39,6 +39,7 @@ public class OperatorSeriesService {
                 j++;
             }
         }
+        logger.debug("Operator series hash count {}", operatorSeriesHash.size());
     }
 
     public String getOperatorName(boolean imsiEmpty, boolean msisdnEmpty, String imsi, String msisdn) {

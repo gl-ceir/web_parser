@@ -8,16 +8,12 @@ import com.glocks.web_parser.service.parser.FeatureList;
 import com.glocks.web_parser.service.parser.ListMgmt.ListMgmtFeature;
 import com.glocks.web_parser.service.parser.TRC.TRCFeature;
 import com.glocks.web_parser.utils.VirtualIpAddressUtil;
-import lombok.Synchronized;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.annotations.Synchronize;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -51,7 +47,7 @@ public class MainController {
     public void listPendingProcessTask() throws InterruptedException {
         // check if vip here or not, if yes then process
         while (true) {
-            if ( virtualIpAddressUtil.getFullList()) {  //remove !
+            if (virtualIpAddressUtil.getFullList()) {  //remove !
                 break;
                 //     break; // Server is active, no need to keep checking
             } else {
@@ -59,12 +55,9 @@ public class MainController {
                 return;
             }
         }
-
-
-        if(isRunning.get() ==  1) {
+        if (isRunning.get() == 1) {
             logger.info("Process already running...");
-        }
-        else {
+        } else {
             logger.info("Starting the web parser process.");
             List<WebActionDb> listOfPendingTasks = webActionDbRepository.getListOfPendingTasks(
                     appConfig.getFeatureList(), appConfig.getWebParserQueryGap());
@@ -80,12 +73,13 @@ public class MainController {
         }
 
     }
+
     public void startProcess(WebActionDb wb) {
 
         logger.info("Starting process for the entry in web_action_db {}", wb);
         String state = wb.getState() == 1 ? "init" : wb.getState() == 2 ? "validateProcess" :
                 wb.getState() == 3 ? "executeProcess" : "";
-        if(state.isEmpty()) {
+        if (state.isEmpty()) {
             logger.error("The web_action_db entry does not have the state column value populated.");
             return;
         }
@@ -98,7 +92,7 @@ public class MainController {
                 .reduce(new String(), (result, ruleNode) -> {
                     if (state.contains("init")) {
                         ruleNode.executeInit(wb);
-                    } else if(state.contains("validateProcess")){
+                    } else if (state.contains("validateProcess")) {
                         ruleNode.validateProcess(wb);
                     } else {
                         ruleNode.executeProcess(wb);
@@ -120,10 +114,7 @@ public class MainController {
     }
 
 
-
 }
-
-
 
 
 // return RulesList.getItems()

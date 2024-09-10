@@ -30,9 +30,9 @@ public class DbClass {
                                      String imsi) {
         GreyList greyList = null;
         if (!imeiEmpty && !imsiEmpty) {  // both imei and imsi is present
-            greyList = greyListRepository.findGreyListByImeiAndImsi(imei.substring(0, 14), imsi);
+            greyList = greyListRepository.findGreyListByImeiAndImsi(imei, imsi);
         } else if (!imeiEmpty && imsiEmpty) { // imsi is empty
-            greyList = greyListRepository.findGreyListByImei(imei.substring(0, 14));
+            greyList = greyListRepository.findGreyListByImei(imei);
         } else if (imeiEmpty && !imsiEmpty) { // imei is empty
             greyList = greyListRepository.findGreyListByImsi(imsi);
         }
@@ -44,9 +44,9 @@ public class DbClass {
                                        String imsi) {
         BlackList blackList = null;
         if (!imeiEmpty && !imsiEmpty) {  // both imei and imsi is present
-            blackList = blackListRepository.findBlackListByImeiAndImsi(imei.substring(0, 14), imsi);
+            blackList = blackListRepository.findBlackListByImeiAndImsi(imei, imsi);
         } else if (!imeiEmpty && imsiEmpty) { // imsi is empty
-            blackList = blackListRepository.findBlackListByImei(imei.substring(0, 14));
+            blackList = blackListRepository.findBlackListByImei(imei);
         } else if (imeiEmpty && !imsiEmpty) { // imei is empty
             blackList = blackListRepository.findBlackListByImsi(imsi);
         }
@@ -58,9 +58,9 @@ public class DbClass {
 
         ExceptionList exceptionList = null;
         if (!imeiEmpty && !imsiEmpty) { // imei and imsi is present
-            exceptionList = exceptionListRepository.findExceptionListByImeiAndImsi(imei.substring(0, 14), imsi);
+            exceptionList = exceptionListRepository.findExceptionListByImeiAndImsi(imei, imsi);
         } else if (!imeiEmpty && imsiEmpty) { // imsi is missing
-            exceptionList = exceptionListRepository.findExceptionListByImei(imei.substring(0, 14));
+            exceptionList = exceptionListRepository.findExceptionListByImei(imei);
         }
         else if (imeiEmpty && !imsiEmpty) { // imei is missing
             exceptionList = exceptionListRepository.findExceptionListByImsi(imsi);
