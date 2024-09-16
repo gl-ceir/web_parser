@@ -21,3 +21,4 @@ public class TrcQaFileDto {
         this.expiryDate = headers[5].trim();
     }
 }
+

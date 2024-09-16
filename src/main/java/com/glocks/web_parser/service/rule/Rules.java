@@ -1,21 +1,17 @@
 package com.glocks.web_parser.service.rule;
 
 
-import com.gl.Rule_engine_Old.RuleEngineApplication;
 import com.gl.rule_engine.RuleInfo;
 import com.glocks.web_parser.config.AppDbConfig;
 import com.glocks.web_parser.dto.RuleDto;
-import com.glocks.web_parser.model.app.TrcLocalManufacturedDevice;
+import com.glocks.web_parser.repository.app.SysParamRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.glocks.web_parser.repository.app.SysParamRepository;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -33,56 +29,35 @@ public class Rules {
     SysParamRepository sysParamRepository;
 
     public String applyRule(List<RuleDto> ruleList, String imei, boolean gracePeriod, Connection conn, String source) {
-        String[] args = {
-                "", "", "", "", "","","","","","","","","",""
-        };
-//        boolean gracePeriod = checkGracePeriod();
         BufferedWriter bw = null;
         String ans = "";
         try {
-
-            for(RuleDto ruleDto: ruleList) {
+            for (RuleDto ruleDto : ruleList) {
                 Statement stmt = conn.createStatement();
+                String sub_imei = imei.length() > 14 ? imei.substring(0, 14) : imei;
                 RuleInfo ruleInfo = new RuleInfo(ruleDto.getName(), "app", "executeRule",
-                        (imei.length() > 14 ? imei.substring(0,14): imei),
-                        conn, source, stmt);
+                        sub_imei, conn, source, stmt, imei);
                 String ruleName = ruleDto.getName();
-//                args[0] = ruleName;
-//                args[1] = "1";
-//                args[3] = imei.length() > 14 ? imei.substring(0,14): imei;
-//                args[9] = "IMEI";
-//                args[10] = "GSM";
-
-
-//                String executeRuleOutput = RuleEngineApplication.startRuleEngine(args, conn, bw);
                 String executeRuleOutput = com.gl.rule_engine.RuleEngineApplication.startRuleEngine(ruleInfo);
                 String expectedRuleOutput = ruleDto.getOutput();
-
-                if(executeRuleOutput.equalsIgnoreCase(expectedRuleOutput)) {
+                if (executeRuleOutput.equalsIgnoreCase(expectedRuleOutput)) {
                     logger.info("Rule {} passed for imei {}", ruleName, imei);
-                }
-                else if(executeRuleOutput.equalsIgnoreCase("error")) // handling in case of gdce rule returns error
-                {
+                } else if (executeRuleOutput.equalsIgnoreCase("error")) {
                     logger.error("Error in GDCE rule. Moving to next record.");
-                    ans = "error_"+ruleDto.getName();
+                    ans = "error_" + ruleDto.getName();
                     break;
-                }
-                else {
+                } else {
                     ans = ruleDto.getName();
                     ruleInfo = new RuleInfo(ruleDto.getName(), "app", "executeAction",
-                            (imei.length() > 14 ? imei.substring(0,14): imei),
-                            conn, "source", (gracePeriod ? ruleDto.getGraceAction() : ruleDto.getPostGraceAction()), stmt);
+                            sub_imei, conn, "source", (gracePeriod ? ruleDto.getGraceAction() : ruleDto.getPostGraceAction()), stmt);
                     logger.info("Rule {} failed for imei {}", ruleName, imei);
-//                    args[1] = "2";
-//                    args[13] = gracePeriod ? ruleDto.getGraceAction() : ruleDto.getPostGraceAction();
                     String actionOutput = com.gl.rule_engine.RuleEngineApplication.startRuleEngine(ruleInfo);
                     String currentAction = gracePeriod ? ruleDto.getFailedRuleActionGrace() :
                             ruleDto.getFailedRuleActionPostGrace();
-                    if(currentAction.equalsIgnoreCase("Record")) {
+                    if (currentAction.equalsIgnoreCase("Record")) {
                         logger.info("Moving to the next record");
                         break;
-                    }
-                    else if(currentAction.equalsIgnoreCase("Rule")) {
+                    } else if (currentAction.equalsIgnoreCase("Rule")) {
                         logger.info("Moving to next rule");
                         continue;
                     }
@@ -148,7 +123,7 @@ public class Rules {
             String value = sysParamRepository.getValueFromTag("GRACE_PERIOD_END_DATE");
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             Date currentDate = new Date();
-            Date graceDate  = sdf.parse(value);
+            Date graceDate = sdf.parse(value);
             if (currentDate.compareTo(graceDate) > 0) {
                 logger.info("Grace Period.");
                 return true;
