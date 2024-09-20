@@ -1,3 +1,4 @@
+<!--
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="info">
     <Properties>
@@ -22,10 +23,10 @@
         </RollingFile>
     </Appenders>
     <Loggers>
-        <!--        <Logger level="WARN" name="org.springframework" />-->
-        <!--        <Logger level="WARN" name="org.jboss" />-->
-        <!--        <Logger level="OFF" name="org.hibernate" />-->
-        <!--        <Logger level="WARN" name="com.company.project.eligibility" />-->
+        &lt;!&ndash;        <Logger level="WARN" name="org.springframework" />&ndash;&gt;
+        &lt;!&ndash;        <Logger level="WARN" name="org.jboss" />&ndash;&gt;
+        &lt;!&ndash;        <Logger level="OFF" name="org.hibernate" />&ndash;&gt;
+        &lt;!&ndash;        <Logger level="WARN" name="com.company.project.eligibility" />&ndash;&gt;
         <Logger name="com.glocks.web_parser" level="debug" additivity="false">
             <AppenderRef ref="LogToFile"/>
             <AppenderRef ref="LogToConsole"/>
@@ -36,4 +37,4 @@
         </Root>
 
     </Loggers>
-</Configuration>
+</Configuration>-->

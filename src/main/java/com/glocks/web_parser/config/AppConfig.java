@@ -71,4 +71,7 @@ public class AppConfig {
 
     @Value("${web.parser.query.gap}")
     Integer webParserQueryGap;
+
+    @Value("${moi.file.path}")
+    private String moiFilePath;
 }
