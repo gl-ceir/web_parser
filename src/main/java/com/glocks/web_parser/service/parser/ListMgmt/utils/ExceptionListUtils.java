@@ -47,8 +47,8 @@ public class ExceptionListUtils {
 
     public boolean processExceptionSingleAddEntry(ListDataMgmt listDataMgmt, ListMgmtDto record, int type, PrintWriter writer) {
         String imsi = type == 1 ? listDataMgmt.getImsi() : record.getImsi().trim();
-        String imei = type == 1 ?listDataMgmt.getImei() : record.getImei();
-        String msisdn = type == 1 ?listDataMgmt.getMsisdn() : record.getMsisdn();
+        String imei = type == 1 ? listDataMgmt.getImei() : record.getImei();
+        String msisdn = type == 1 ? listDataMgmt.getMsisdn() : record.getMsisdn();
         boolean imsiEmpty = validation.isEmptyAndNull(imsi);
         boolean msisdnEmpty = validation.isEmptyAndNull(msisdn);
         boolean imeiEmpty = validation.isEmptyAndNull(imei);
@@ -57,77 +57,78 @@ public class ExceptionListUtils {
         try {
             // search in list if already exists or not.
 
-            if(!imsiEmpty) imsi = imsi.trim();
-            if(!imeiEmpty) imei = imei.trim();
-            if(!msisdnEmpty) msisdn = msisdn.trim();
-            if(imsiEmpty && !msisdnEmpty) {
+            if (!imsiEmpty) imsi = imsi.trim();
+            if (!imeiEmpty) imei = imei.trim();
+            if (!msisdnEmpty) msisdn = msisdn.trim();
+            if (imsiEmpty && !msisdnEmpty) {
                 imsi = hlrService.popluateImsi(msisdn);
-                if(validation.isEmptyAndNull(imsi)) {
+                if (validation.isEmptyAndNull(imsi)) {
                     logger.error("The entry is failed.");
-                    writer.println((msisdnEmpty ? "":msisdn)+","+(imsiEmpty ? "":imsi)+","+(imeiEmpty ? "":imei )+","+
+                    writer.println((msisdnEmpty ? "" : msisdn) + "," + (imsiEmpty ? "" : imsi) + "," + (imeiEmpty ? "" : imei) + "," +
                             dbConfigService.getValue("msgForEntryFailedInExceptionList"));
                     return false;
                 }
                 filled = true;
                 imsiEmpty = false;
             }
-              ExceptionList exceptionList = dbClass.getExceptionListEntry(imsiEmpty, imeiEmpty, imei, imsi);
+            ExceptionList exceptionList = dbClass.getExceptionListEntry(imsiEmpty, imeiEmpty, imei, imsi);
             // if present write in file and exit.
             if (exceptionList != null) {
                 logger.info("The entry already exists {}", exceptionList);
 //                writer.println(msisdn+","+imsi+","+imei+","+"ALREADY_EXIST");
-                writer.println((msisdnEmpty ? "":msisdn)+","+(imsiEmpty ? "":imsi)+","+(imeiEmpty ? "":imei )+","+dbConfigService.getValue("msgForAlreadyExistsInExceptionList"));
+                writer.println((msisdnEmpty ? "" : msisdn) + "," + (imsiEmpty ? "" : imsi) + "," + (imeiEmpty ? "" : imei) + "," + dbConfigService.getValue("msgForAlreadyExistsInExceptionList"));
             }
             // if not present make entry in table
             else {
                 logger.info("The entry for msisdn {}, imsi {} and imei {} does not exist.", msisdn, imsi, imei);
                 String operatorName = operatorSeriesService.getOperatorName(imsiEmpty, msisdnEmpty, imsi, msisdn);
-                if(validation.isEmptyAndNull(operatorName) && (!imsiEmpty || !msisdnEmpty)) { // operator name not found if imsi or msisdn is present.
+                if (validation.isEmptyAndNull(operatorName) && (!imsiEmpty || !msisdnEmpty)) { // operator name not found if imsi or msisdn is present.
                     logger.info("The operator name from operator series is not found.");
                     logger.error("The entry is failed.");
-                    writer.println((msisdnEmpty ? "":msisdn)+","+(imsiEmpty ? "":imsi)+","+(imeiEmpty ? "":imei )+","+dbConfigService.getValue("msgForEntryFailedInBlackList"));
+                    writer.println((msisdnEmpty ? "" : msisdn) + "," + (imsiEmpty ? "" : imsi) + "," + (imeiEmpty ? "" : imei) + "," + dbConfigService.getValue("msgForEntryFailedInBlackList"));
                     return false;
                 }
-                if(filled && type == 1) {
+                if (filled && type == 1) {
                     listDataMgmt.setImsi(imsi);
                 } else if (filled && type == 0) record.setImsi(imsi);
                 // search in black list or grey list is present then don't add
                 BlackList blackList = dbClass.getBlackListEntry(imsiEmpty, imeiEmpty, imei, imsi);
 
-                if(blackList != null) {
+                if (blackList != null) {
                     logger.info("The entry already exists in black list {}", blackList);
-                    writer.println((msisdnEmpty ? "":msisdn)+","+(imsiEmpty ? "":imsi)+","+(imeiEmpty ? "":imei )+","+dbConfigService.getValue("msgForAlreadyExistsInBlackList"));
+                    writer.println((msisdnEmpty ? "" : msisdn) + "," + (imsiEmpty ? "" : imsi) + "," + (imeiEmpty ? "" : imei) + "," + dbConfigService.getValue("msgForAlreadyExistsInBlackList"));
                     return false;
                 }
                 GreyList greyList = dbClass.getGreyListEntry(imsiEmpty, imeiEmpty, imei, imsi);
-                if(greyList != null) {
+                if (greyList != null) {
                     logger.info("The entry already exists in grey list {}", greyList);
-                    writer.println((msisdnEmpty ? "":msisdn)+","+(imsiEmpty ? "":imsi)+","+(imeiEmpty ? "":imei )+","+dbConfigService.getValue("msgForAlreadyExistsInGreyList"));
+                    writer.println((msisdnEmpty ? "" : msisdn) + "," + (imsiEmpty ? "" : imsi) + "," + (imeiEmpty ? "" : imei) + "," + dbConfigService.getValue("msgForAlreadyExistsInGreyList"));
                     return false;
                 }
                 exceptionList = type == 1 ? ExceptionListBuilder.forInsert(listDataMgmt, operatorName) : ExceptionListBuilder.forInsert(listDataMgmt, record, operatorName);
-                logger.info("Entry save in exception list {}",exceptionList);
+                logger.info("Entry save in exception list {}", exceptionList);
                 exceptionListRepository.save(exceptionList);
                 ExceptionListHis exceptionListHisEntity = ExceptionListHisBuilder.forInsert(exceptionList, 1, listDataMgmt);
                 logger.info("Entry save in exception list his {}", exceptionListHisEntity);
                 exceptionListHisRepository.save(exceptionListHisEntity);
 //                writer.println(msisdn+","+imsi+","+imei+","+"ADDED");
-                writer.println((msisdnEmpty ? "":msisdn)+","+(imsiEmpty ? "":imsi)+","+(imeiEmpty ? "":imei )+","+dbConfigService.getValue("msgForAddedInExceptionList"));
+                writer.println((msisdnEmpty ? "" : msisdn) + "," + (imsiEmpty ? "" : imsi) + "," + (imeiEmpty ? "" : imei) + "," + dbConfigService.getValue("msgForAddedInExceptionList"));
             }
             return true;
         } catch (Exception ex) {
             logger.error("Error while processing the entry for exception list, for request {} and action {}, message {}",
                     listDataMgmt.getRequestType(), listDataMgmt.getAction(), ex.getMessage());
 //            writer.println(msisdn+","+imsi+","+imei+","+"ENTRY_FAILED");
-            writer.println((msisdnEmpty ? "":msisdn)+","+(imsiEmpty ? "":imsi)+","+(imeiEmpty ? "":imei )+","+dbConfigService.getValue("msgForEntryFailedInExceptionList"));
+            writer.println((msisdnEmpty ? "" : msisdn) + "," + (imsiEmpty ? "" : imsi) + "," + (imeiEmpty ? "" : imei) + "," + dbConfigService.getValue("msgForEntryFailedInExceptionList"));
 
             return false;
         }
     }
+
     public boolean processExceptionSingleDelEntry(ListDataMgmt listDataMgmt, ListMgmtDto record, int type, PrintWriter writer) {
         String imsi = type == 1 ? listDataMgmt.getImsi() : record.getImsi().trim();
-        String imei = type == 1 ?listDataMgmt.getImei() : record.getImei();
-        String msisdn = type == 1 ?listDataMgmt.getMsisdn() : record.getMsisdn();
+        String imei = type == 1 ? listDataMgmt.getImei() : record.getImei();
+        String msisdn = type == 1 ? listDataMgmt.getMsisdn() : record.getMsisdn();
         boolean imsiEmpty = validation.isEmptyAndNull(imsi);
         boolean msisdnEmpty = validation.isEmptyAndNull(msisdn);
         boolean imeiEmpty = validation.isEmptyAndNull(imei);
@@ -136,14 +137,14 @@ public class ExceptionListUtils {
         try {
             // search in list if already exists or not.
 
-            if(!imsiEmpty) imsi = imsi.trim();
-            if(!imeiEmpty) imei = imei.trim();
-            if(!msisdnEmpty) msisdn = msisdn.trim();
-            if(imsiEmpty && !msisdnEmpty) {
+            if (!imsiEmpty) imsi = imsi.trim();
+            if (!imeiEmpty) imei = imei.trim();
+            if (!msisdnEmpty) msisdn = msisdn.trim();
+            if (imsiEmpty && !msisdnEmpty) {
                 imsi = hlrService.popluateImsi(msisdn);
-                if(validation.isEmptyAndNull(imsi)) {
+                if (validation.isEmptyAndNull(imsi)) {
                     logger.error("The entry is failed.");
-                    writer.println((msisdnEmpty ? "":msisdn)+","+(imsiEmpty ? "":imsi)+","+(imeiEmpty ? "":imei )+","+
+                    writer.println((msisdnEmpty ? "" : msisdn) + "," + (imsiEmpty ? "" : imsi) + "," + (imeiEmpty ? "" : imei) + "," +
                             dbConfigService.getValue("msgForEntryFailedInExceptionList"));
 //                    return false;
                 }
@@ -162,13 +163,13 @@ public class ExceptionListUtils {
                 logger.info("Entry save in exception list his {}", exceptionListHisEntity);
                 exceptionListHisRepository.save(exceptionListHisEntity);
 //                writer.println(msisdn + "," + imsi + "," + imei + "," + "DELETED");
-                writer.println((msisdnEmpty ? "":msisdn)+","+(imsiEmpty ? "":imsi)+","+(imeiEmpty ? "":imei )+","+dbConfigService.getValue("msgForDeletedInExceptionList"));
+                writer.println((msisdnEmpty ? "" : msisdn) + "," + (imsiEmpty ? "" : imsi) + "," + (imeiEmpty ? "" : imei) + "," + dbConfigService.getValue("msgForDeletedInExceptionList"));
             }
             // if present write in file and exit
             else {
                 logger.info("The entry for msisdn {}, imsi {} and imei {} does not exist.", msisdn, imsi, imei);
 //                writer.println(msisdn + "," + imsi + "," + imei + "," + "NOT_EXIST");
-                writer.println((msisdnEmpty ? "":msisdn)+","+(imsiEmpty ? "":imsi)+","+(imeiEmpty ? "":imei )+","+dbConfigService.getValue("msgForNotExistsInExceptionList"));
+                writer.println((msisdnEmpty ? "" : msisdn) + "," + (imsiEmpty ? "" : imsi) + "," + (imeiEmpty ? "" : imei) + "," + dbConfigService.getValue("msgForNotExistsInExceptionList"));
 
 
             }
@@ -177,7 +178,7 @@ public class ExceptionListUtils {
             logger.error("Error while processing the entry for exception list, for request {} and action {}, message {}",
                     listDataMgmt.getRequestType(), listDataMgmt.getAction(), ex.getMessage());
 //            writer.println(msisdn+","+imsi+","+imei+","+"ENTRY_FAILED");
-            writer.println((msisdnEmpty ? "":msisdn)+","+(imsiEmpty ? "":imsi)+","+(imeiEmpty ? "":imei )+","+dbConfigService.getValue("msgForEntryFailedInExceptionList"));
+            writer.println((msisdnEmpty ? "" : msisdn) + "," + (imsiEmpty ? "" : imsi) + "," + (imeiEmpty ? "" : imei) + "," + dbConfigService.getValue("msgForEntryFailedInExceptionList"));
 
             return false;
 

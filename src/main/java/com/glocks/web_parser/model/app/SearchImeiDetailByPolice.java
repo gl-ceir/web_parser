@@ -1,25 +1,36 @@
 package com.glocks.web_parser.model.app;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "search_imei_detail_by_police")
-@Data
+@Setter
+@Getter
+@ToString
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class SearchImeiDetailByPolice implements Serializable {
     private static final long serialVersionUID = -2772314216410962795L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "created_on", nullable = false, updatable = false)
-    private LocalDateTime createdOn;
+    @CreationTimestamp
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "created_on")
+    LocalDateTime createdOn;
 
+    @UpdateTimestamp
+    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "modified_on")
-    private LocalDateTime modifiedOn;
+    LocalDateTime modifiedOn;
 
     @Column(name = "imei", nullable = false)
     private String imei;

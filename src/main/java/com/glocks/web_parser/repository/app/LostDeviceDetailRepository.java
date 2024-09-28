@@ -17,7 +17,11 @@ public interface LostDeviceDetailRepository extends JpaRepository<LostDeviceDeta
     Boolean existsByImeiAndStatusIgnoreCaseAndRequestTypeIgnoreCaseIn(String imei, String status, List<String> requestTypes);
 
     @Query("SELECT x.requestId FROM LostDeviceDetail x WHERE x.imei =:imei")
-    Optional<String> findByImei(String imei);
+    Optional<String> findLostDeviceDetailByImei(String imei);
 
     Optional<LostDeviceDetail> findByImeiAndStatusIgnoreCaseAndRequestTypeIgnoreCaseIn(String imei, String status, List<String> requestType);
+
+    int deleteByImeiAndStatusIn(String imei, List<String> status);
+
+    Boolean existsByImei(String imei);
 }

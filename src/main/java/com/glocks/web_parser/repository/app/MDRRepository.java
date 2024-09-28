@@ -10,5 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface MDRRepository extends JpaRepository<MobileDeviceRepository, Integer> {
-    Optional<List<MobileDeviceRepository>> findByDeviceIdIn(List<String> deviceIds);
+    Optional<List<MobileDeviceRepository>> findByDeviceId(String deviceId);
+
+    Boolean existsByDeviceIdAndIsTypeApproved(String tac, int typeApproved);
 }

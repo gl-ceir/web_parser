@@ -7,6 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "search_imei_by_police_mgmt")
@@ -60,5 +61,8 @@ public class SearchImeiByPoliceMgmt implements Serializable {
 
     @Column(name = "count_found_in_lost")
     private Integer countFoundInLost;
+
+    @Column(name = "fail_reason")
+    private String failReason;
 
 }

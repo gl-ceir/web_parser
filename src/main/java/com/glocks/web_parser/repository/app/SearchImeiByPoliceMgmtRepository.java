@@ -16,13 +16,13 @@ import java.util.Optional;
 @Transactional(rollbackOn = {SQLException.class})
 public interface SearchImeiByPoliceMgmtRepository extends JpaRepository<SearchImeiByPoliceMgmt, Long>, JpaSpecificationExecutor<SearchImeiByPoliceMgmt> {
     @Modifying
-    @Query("UPDATE SearchImeiByPoliceMgmt x SET x.status =:status, x.countFoundInLost =:count WHERE x.transactionId =:transactionId")
-    public int updateCountFoundInLost(String status, int count, String transactionId);
+    @Query("UPDATE SearchImeiByPoliceMgmt x SET x.status =:status, x.countFoundInLost =:count, x.failReason =:failReason WHERE x.transactionId =:transactionId")
+    public void updateCountFoundInLost(String status, int count, String transactionId, String failReason);
 
     Optional<SearchImeiByPoliceMgmt> findByTransactionId(String txnId);
 
     @Modifying
-    @Query("UPDATE SearchImeiByPoliceMgmt x SET x.status =:status WHERE x.transactionId =:transactionId")
-    public int updateStatus(String status, String transactionId);
+    @Query("UPDATE SearchImeiByPoliceMgmt x SET x.status =:status, x.failReason =:failReason WHERE x.transactionId =:transactionId")
+    public int updateStatus(String status, String transactionId, String failReason);
 
 }
