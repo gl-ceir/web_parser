@@ -31,22 +31,22 @@ public class IMEISeriesModel {
                 case 0 -> {
                     this.imei1 = recordIndexWise(record[i]);
                     map.put("imei1", this.imei1);
-                    map.put(this.imei1, "imei1");
+                   // map.put(this.imei1, "imei1");
                 }
                 case 1 -> {
                     this.imei2 = recordIndexWise(record[i]);
                     map.put("imei2", this.imei2);
-                    map.put(this.imei2, "imei2");
+                  //  map.put(this.imei2, "imei2");
                 }
                 case 2 -> {
                     this.imei3 = recordIndexWise(record[i]);
                     map.put("imei3", this.imei3);
-                    map.put(this.imei3, "imei3");
+                  //  map.put(this.imei3, "imei3");
                 }
                 case 3 -> {
                     this.imei4 = recordIndexWise(record[i]);
                     map.put("imei4", this.imei4);
-                    map.put(this.imei4, "imei4");
+                   // map.put(this.imei4, "imei4");
                 }
             }
         }

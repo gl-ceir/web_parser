@@ -312,7 +312,7 @@ public class MOIService {
 
     public Predicate<String> isNumericAndValid = record -> {
         if (new Validation().isNumeric(record)) {
-            return !isIMEILengthAllowed.test(record) ? false : true;
+            return isIMEILengthAllowed.test(record) ? true : false;
         }
         return false;
     };

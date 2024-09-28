@@ -52,13 +52,11 @@ public class LostDeviceMgmt implements Serializable {
     @Column(name = "device_lost_date_time")
     private String deviceLostDateTime;
 
-/*
     @Column(name = "device_brand")
     private String deviceBrand;
 
     @Column(name = "device_model")
     private String deviceModel;
-*/
 
     /*
         @Column(name = "device_purchase_invoice_url")

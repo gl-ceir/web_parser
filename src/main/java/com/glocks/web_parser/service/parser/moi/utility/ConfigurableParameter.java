@@ -9,7 +9,9 @@ public enum ConfigurableParameter {
     ALERT_PENDING_VERIFICATION("alert00001"),
     PENDING_VERIFICATION_FEATURE("MOI"),
     PENDING_VERIFICATION_TAG("MOI_PENDING_VERIFICATION_MSG"),
-    ALERT_RECOVER("alert00001");
+    ALERT_RECOVER("alert00001"),
+    PENDING_VERIFICATION_STAGE_INIT("0"),
+    PENDING_VERIFICATION_STAGE_DONE("1");
     private String value;
 
     private ConfigurableParameter(String value) {

@@ -6,6 +6,7 @@ import com.glocks.web_parser.model.app.LostDeviceMgmt;
 import com.glocks.web_parser.model.app.WebActionDb;
 import com.glocks.web_parser.repository.app.WebActionDbRepository;
 import com.glocks.web_parser.service.fileOperations.FileOperations;
+import com.glocks.web_parser.service.parser.moi.utility.ConfigurableParameter;
 import com.glocks.web_parser.service.parser.moi.utility.MOIService;
 import com.glocks.web_parser.service.parser.moi.utility.RequestTypeHandler;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +45,7 @@ public class PendingVerificationRequest implements RequestTypeHandler<LostDevice
         logger.info("Uploaded file path is {}", uploadedFilePath);
         if (!fileOperations.checkFileExists(uploadedFilePath)) {
             logger.error("Uploaded file does not exists in path {} for lost ID {}", uploadedFilePath, transactionId);
-            //  alertService.raiseAnAlert(transactionId, AlertIdEnum.ALERT_PENDING_VERIFICATION.getAlertID(), "MOI Pending Verification", uploadedFileName + " with transaction id " + transactionId, 0);
+            alertService.raiseAnAlert(transactionId, ConfigurableParameter.ALERT_PENDING_VERIFICATION.getValue(), "MOI Pending Verification", uploadedFileName + " with transaction id " + transactionId, 0);
             return;
         }
         map.put("uploadedFileName", uploadedFileName);
@@ -60,8 +61,13 @@ public class PendingVerificationRequest implements RequestTypeHandler<LostDevice
         String transactionId = map.get("transactionId");
         String processedFilePath = map.get("moiFilePath") + "/" + transactionId + "/" + transactionId + ".csv";
         logger.info("Processed file path is {}", processedFilePath);
-        // create a file
         PrintWriter printWriter = moiService.file(processedFilePath);
-        pendingVerificationService.pendingVerificationFileValidation(webActionDb, map.get("uploadedFilePath"), lostDeviceMgmt, printWriter, map.get("uploadedFileName"));
+        boolean verificationStatus = pendingVerificationService.pendingVerificationFileValidation(webActionDb, map.get("uploadedFilePath"), lostDeviceMgmt, printWriter, map.get("uploadedFileName"), ConfigurableParameter.PENDING_VERIFICATION_STAGE_INIT.getValue());
+        logger.info("verificationStatus {}",verificationStatus);
+        if (verificationStatus)
+            pendingVerificationService.validFile(webActionDb, map.get("uploadedFilePath"), lostDeviceMgmt, printWriter, map.get("uploadedFileName"), ConfigurableParameter.PENDING_VERIFICATION_STAGE_DONE.getValue());
+        else
+            pendingVerificationService.invalidFile(webActionDb, map.get("uploadedFilePath"), lostDeviceMgmt, printWriter, map.get("uploadedFileName"), ConfigurableParameter.PENDING_VERIFICATION_STAGE_INIT.getValue());
+
     }
 }
