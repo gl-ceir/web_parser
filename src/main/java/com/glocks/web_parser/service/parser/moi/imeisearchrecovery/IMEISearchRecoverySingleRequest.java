@@ -23,28 +23,28 @@ public class IMEISearchRecoverySingleRequest implements RequestTypeHandler<Searc
     private final MOIService moiService;
     private final IMEISearchRecoveryService imeiSearchRecoveryService;
     private final WebActionDbRepository webActionDbRepository;
+    IMEISeriesModel imeiSeriesModel = new IMEISeriesModel();
 
     @Override
     public void executeInitProcess(WebActionDb webActionDb, SearchImeiByPoliceMgmt searchImeiByPoliceMgmt) {
-        executeProcess(webActionDb, searchImeiByPoliceMgmt);
+        executeValidateProcess(webActionDb, searchImeiByPoliceMgmt);
     }
 
     @Override
     public void executeValidateProcess(WebActionDb webActionDb, SearchImeiByPoliceMgmt searchImeiByPoliceMgmt) {
-
-    }
-
-    @Override
-    public void executeProcess(WebActionDb webActionDb, SearchImeiByPoliceMgmt searchImeiByPoliceMgmt) {
-        IMEISeriesModel imeiSeriesModel = new IMEISeriesModel();
         BeanUtils.copyProperties(searchImeiByPoliceMgmt, imeiSeriesModel);
         String transactionId = searchImeiByPoliceMgmt.getTransactionId();
         boolean multipleIMEIExist = moiService.isMultipleIMEIExist(imeiSeriesModel);
         if (multipleIMEIExist) {
-            if (!imeiSearchRecoveryService.isBrandAndModelGenuine(webActionDb, imeiSeriesModel, transactionId))
-                return;
+            if (!imeiSearchRecoveryService.isBrandAndModelGenuine(webActionDb, imeiSeriesModel, transactionId)) return;
         }
-        boolean isLostDeviceDetailExist = false;
+        executeProcess(webActionDb, searchImeiByPoliceMgmt);
+    }
+
+    @Override
+    public void executeProcess(WebActionDb webActionDb, SearchImeiByPoliceMgmt searchImeiByPoliceMgmt) {
+        imeiSearchRecoveryService.actionAtRecord(imeiSeriesModel, webActionDb, searchImeiByPoliceMgmt.getTransactionId(), null, "SINGLE", null);
+/*        boolean isLostDeviceDetailExist = false;
         List<String> imeiList = moiService.imeiList(imeiSeriesModel);
         if (!imeiList.isEmpty()) {
             try {
@@ -67,6 +67,6 @@ public class IMEISearchRecoverySingleRequest implements RequestTypeHandler<Searc
                 webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
                 logger.info("Oops!, error occur while execution {}", e.getMessage());
             }
-        }
+        }*/
     }
 }

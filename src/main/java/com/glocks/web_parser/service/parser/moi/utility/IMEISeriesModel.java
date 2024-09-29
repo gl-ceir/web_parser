@@ -25,31 +25,28 @@ public class IMEISeriesModel {
 
     }
 
-    public IMEISeriesModel(String[] record) {
+    public IMEISeriesModel setImeiSeries(String[] record) {
         for (int i = 0; i < record.length; i++) {
             switch (i) {
                 case 0 -> {
                     this.imei1 = recordIndexWise(record[i]);
                     map.put("imei1", this.imei1);
-                   // map.put(this.imei1, "imei1");
                 }
                 case 1 -> {
                     this.imei2 = recordIndexWise(record[i]);
                     map.put("imei2", this.imei2);
-                  //  map.put(this.imei2, "imei2");
                 }
                 case 2 -> {
                     this.imei3 = recordIndexWise(record[i]);
                     map.put("imei3", this.imei3);
-                  //  map.put(this.imei3, "imei3");
                 }
                 case 3 -> {
                     this.imei4 = recordIndexWise(record[i]);
                     map.put("imei4", this.imei4);
-                   // map.put(this.imei4, "imei4");
                 }
             }
         }
+        return this;
     }
 
     public String recordIndexWise(String input) {

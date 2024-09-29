@@ -1,5 +1,6 @@
 package com.glocks.web_parser.service.parser.moi.imeisearchrecovery;
 
+import com.glocks.web_parser.model.app.LostDeviceDetail;
 import com.glocks.web_parser.model.app.SearchImeiByPoliceMgmt;
 import com.glocks.web_parser.model.app.WebActionDb;
 import com.glocks.web_parser.repository.app.WebActionDbRepository;
@@ -10,7 +11,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
+import java.io.PrintWriter;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -53,5 +56,42 @@ public class IMEISearchRecoveryService {
         moiService.updateStatusAndCountFoundInLost("Success", 0, transactionId, "IMEI not found");
         webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
 
+    }
+
+    public int actionAtRecord(IMEISeriesModel imeiSeriesModel, WebActionDb webActionDb, String transactionId, PrintWriter printWriter, String mode, String[] split) {
+        int successCount = 0;
+        boolean isLostDeviceDetailExist = false;
+        logger.info("IMEISeriesModel {}", imeiSeriesModel);
+        List<String> imeiList = moiService.imeiList(imeiSeriesModel);
+        if (!imeiList.isEmpty()) {
+            try {
+                for (String imei : imeiList) {
+                    Optional<LostDeviceDetail> LostDeviceDetailOptional = moiService.findByImeiAndStatusAndRequestType(imei);
+                    if (LostDeviceDetailOptional.isPresent()) {
+                        boolean isCopiedRecordLostDeviceMgmtToSearchIMEIDetailByPolice = this.isRequestIdFound(imei, imeiSeriesModel.getMap().get(imei), webActionDb, transactionId, LostDeviceDetailOptional.get().getRequestId(), "SINGLE", 1);
+                        if (isCopiedRecordLostDeviceMgmtToSearchIMEIDetailByPolice) {
+                            if (mode.equalsIgnoreCase("BULK")) {
+                                printWriter.println(moiService.joiner(split, ",Found"));
+                                successCount++;
+                            }
+                            isLostDeviceDetailExist = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!isLostDeviceDetailExist) {
+                    if (mode.equalsIgnoreCase("BULK")) {
+                        printWriter.println(moiService.joiner(split, ",Not Found"));
+                    }
+                    this.isLostDeviceDetailEmpty(webActionDb, transactionId);
+                }
+            } catch (Exception e) {
+                moiService.updateStatusAndCountFoundInLost("Fail", 0, transactionId, "Please try after some time");
+                webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
+                logger.info("Oops!, error occur while execution {}", e.getMessage());
+            }
+        }
+        return successCount;
     }
 }

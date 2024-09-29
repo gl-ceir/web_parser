@@ -36,6 +36,7 @@ public class MOIRecoverService {
     public boolean fileValidation(String filePath, LostDeviceMgmt lostDeviceMgmt) {
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String record;
+            IMEISeriesModel imeiSeriesModel = new IMEISeriesModel();
             String[] split;
             boolean headerSkipped = false;
             while ((record = reader.readLine()) != null) {
@@ -44,7 +45,7 @@ public class MOIRecoverService {
                         headerSkipped = true;
                     } else {
                         split = record.split(appConfig.getListMgmtFileSeparator(), -1);
-                        IMEISeriesModel imeiSeriesModel = new IMEISeriesModel(split);
+                        imeiSeriesModel.setImeiSeries(split);
                         logger.info("LostDeviceMgmt : {}", imeiSeriesModel);
                         List<String> imeiList = moiService.imeiSeries.apply(imeiSeriesModel);
                         if (imeiList.size() > 0) imeiList.forEach(imei -> {

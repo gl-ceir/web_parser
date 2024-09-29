@@ -78,6 +78,7 @@ public class IMEISearchRecoveryBulkRequest implements RequestTypeHandler<SearchI
         try (BufferedReader reader = new BufferedReader(new FileReader(uploadedFilePath))) {
             String record;
             String[] header;
+            IMEISeriesModel imeiSeriesModel = new IMEISeriesModel();
             String[] split;
             boolean headerSkipped = false;
             while ((record = reader.readLine()) != null) {
@@ -89,7 +90,7 @@ public class IMEISearchRecoveryBulkRequest implements RequestTypeHandler<SearchI
                         headerSkipped = true;
                     } else {
                         split = record.split(appConfig.getListMgmtFileSeparator(), -1);
-                        IMEISeriesModel imeiSeriesModel = new IMEISeriesModel(split);
+                        imeiSeriesModel.setImeiSeries(split);
                         logger.info("IMEISeriesModel {}", imeiSeriesModel);
 
                         boolean isImeiValid = Stream.of(split).allMatch(imei -> moiService.isNumericAndValid(imei));
@@ -100,9 +101,12 @@ public class IMEISearchRecoveryBulkRequest implements RequestTypeHandler<SearchI
                             if (multipleIMEIExist) {
                                 if (!imeiSearchRecoveryService.isBrandAndModelGenuine(webActionDb, imeiSeriesModel, transactionId)) {
                                     printWriter.println(moiService.joiner(split, ", IMEI is not belongs to same device brand and model"));
+                                    continue;
                                 }
                             }
-                            List<String> imeiList = moiService.imeiList(imeiSeriesModel);
+                            int count = imeiSearchRecoveryService.actionAtRecord(imeiSeriesModel, webActionDb, transactionId, printWriter, "BULK", split);
+                            successCount += count;
+/*                            List<String> imeiList = moiService.imeiList(imeiSeriesModel);
                             boolean isLostDeviceDetailExist = false;
                             if (!imeiList.isEmpty()) {
                                 try {
@@ -126,10 +130,10 @@ public class IMEISearchRecoveryBulkRequest implements RequestTypeHandler<SearchI
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                     moiService.updateStatusAndCountFoundInLost("Fail", 0, transactionId, "Please try after some time");
-                              //      webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
+                                    //      webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
                                     logger.info("Oops!, error occur while execution {}", e.getMessage());
                                 }
-                            }
+                            }*/
                         }
                     }
                 }
