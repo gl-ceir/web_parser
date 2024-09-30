@@ -33,8 +33,8 @@ public class MOIFeatureExist {
         if (Objects.nonNull(columnName) && !columnName.isEmpty()) {
             map.put("IMEI_SEARCH_RECOVERY", (x, y) -> imeiSearchRecoverySubFeature.delegateInitRequest(x, (SearchImeiByPoliceMgmt) y));
             map.put("RECOVER", (x, y) -> moiRecoverSubFeature.delegateInitRequest(x, (LostDeviceMgmt) y));
-/*            map.put("LOST/STOLEN", (x, y) -> moiLostStolenSubFeature.delegateInitRequest(x, (LostDeviceMgmt) y));
-            map.put("LOST", (x, y) -> moiLostStolenSubFeature.delegateInitRequest(x, (LostDeviceMgmt) y));*/
+            map.put("LOST/STOLEN", (x, y) -> moiLostStolenSubFeature.delegateInitRequest(x, (LostDeviceMgmt) y));
+            map.put("LOST", (x, y) -> moiLostStolenSubFeature.delegateInitRequest(x, (LostDeviceMgmt) y));
             map.put("STOLEN", (x, y) -> moiLostStolenSubFeature.delegateInitRequest(x, (LostDeviceMgmt) y));
             map.put("PENDING_VERIFICATION", (x, y) -> pendingVerificationFeature.delegateInitRequest(x, (LostDeviceMgmt) y));
         }

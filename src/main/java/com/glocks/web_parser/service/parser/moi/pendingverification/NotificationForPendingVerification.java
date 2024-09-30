@@ -2,6 +2,7 @@ package com.glocks.web_parser.service.parser.moi.pendingverification;
 
 import com.glocks.web_parser.dto.EmailDto;
 import com.glocks.web_parser.dto.SmsNotificationDto;
+import com.glocks.web_parser.model.app.EirsResponseParam;
 import com.glocks.web_parser.model.app.LostDeviceMgmt;
 import com.glocks.web_parser.model.app.WebActionDb;
 import com.glocks.web_parser.repository.app.EirsResponseParamRepository;
@@ -27,11 +28,12 @@ public class NotificationForPendingVerification {
     private final EirsResponseParamRepository eirsResponseParamRepository;
     private final SysParamRepository sysParamRepository;
 
-    public void sendNotification(WebActionDb webActionDb, LostDeviceMgmt lostDeviceMgmt, String channel, String currentFileName, String uploadedFilePath) {
+    public void sendNotification(WebActionDb webActionDb, LostDeviceMgmt lostDeviceMgmt, String channel, String uploadedFilePath) {
         String requestId = lostDeviceMgmt.getRequestId();
         String subFeature = webActionDb.getSubFeature();
         String feature = webActionDb.getFeature();
         String email = lostDeviceMgmt.getEmailForOtp();
+        EirsResponseParam eirsResponseParam;
         String language = lostDeviceMgmt.getLanguage() == null ?
                 sysParamRepository.getValueFromTag("systemDefaultLanguage") : lostDeviceMgmt.getLanguage();
         switch (channel) {
@@ -44,8 +46,8 @@ public class NotificationForPendingVerification {
                 smsNotificationDto.setEmail(email);
                 smsNotificationDto.setChannelType("SMS");
                 smsNotificationDto.setMsisdn(lostDeviceMgmt.getContactNumber());
-                smsNotificationDto.setMessage(utilFunctions.replaceString(eirsResponseParamRepository.findValue(ConfigurableParameter.PENDING_VERIFICATION_FEATURE.getValue(),
-                        language, ConfigurableParameter.PENDING_VERIFICATION_TAG.getValue()), 0L, requestId, currentFileName));
+                eirsResponseParam = utilFunctions.replaceParameter(eirsResponseParamRepository.getByTagAndLanguage(ConfigurableParameter.STOLEN_TAG_NOTIFICATION.getValue(), language), requestId, lostDeviceMgmt.getContactNumber(), channel);
+                smsNotificationDto.setMessage(eirsResponseParam.getValue());
                 logger.info("SMS notification sent {}", smsNotificationDto);
                 smsService.callSmsNotificationApi(smsNotificationDto);
             }
@@ -55,13 +57,12 @@ public class NotificationForPendingVerification {
                 emailDto.setTxn_id(requestId);
                 emailDto.setLanguage(language);
                 emailDto.setFile(uploadedFilePath);
-                emailDto.setSubject(utilFunctions.replaceString(eirsResponseParamRepository.findValue(featureName,
-                        language, numberOfRecordsSubject), 0L, lostDeviceMgmt.getRequestId(), currentFileName));
-                emailDto.setMessage(utilFunctions.replaceString(eirsResponseParamRepository.findValue(featureName,
-                        language, numberOfRecordsMessage), 0L, requestId, currentFileName));
+                eirsResponseParam = utilFunctions.replaceParameter(eirsResponseParamRepository.getByTagAndLanguage(ConfigurableParameter.STOLEN_TAG_NOTIFICATION.getValue(), language), lostDeviceMgmt.getRequestId(), null, channel);
+                emailDto.setSubject(eirsResponseParam.getDescription());
+                emailDto.setMessage(eirsResponseParam.getValue());
+                logger.info("EMAIL notification sent {}", emailDto);
                 emailService.callEmailApi(emailDto);
             }
         }
-
     }
 }

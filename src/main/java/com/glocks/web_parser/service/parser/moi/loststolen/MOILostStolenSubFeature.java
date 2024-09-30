@@ -2,6 +2,7 @@ package com.glocks.web_parser.service.parser.moi.loststolen;
 
 import com.glocks.web_parser.model.app.LostDeviceMgmt;
 import com.glocks.web_parser.model.app.WebActionDb;
+import com.glocks.web_parser.service.parser.moi.utility.ConfigurableParameter;
 import com.glocks.web_parser.service.parser.moi.utility.RequestTypeHandler;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
@@ -13,17 +14,20 @@ import org.springframework.stereotype.Component;
 public class MOILostStolenSubFeature {
     private final Logger logger = LogManager.getLogger(this.getClass());
     private final MOILostStolenSingleRequest moiLostStolenSingleRequest;
+    private final MOILostStolenBulkRequest moiLostStolenBulkRequest;
 
     public void delegateInitRequest(WebActionDb webActionDb, LostDeviceMgmt lostDeviceMgmt) {
         RequestTypeHandler requestTypeHandler = checkType(lostDeviceMgmt);
-        requestTypeHandler.executeInitProcess(webActionDb, lostDeviceMgmt);
+        if (requestTypeHandler != null) {
+            logger.info("executed {} operation", lostDeviceMgmt.getRequestMode());
+            requestTypeHandler.executeInitProcess(webActionDb, lostDeviceMgmt);
+        } else logger.info("Invalid request mode");
     }
 
     public RequestTypeHandler checkType(LostDeviceMgmt lostDeviceMgmt) {
         String requestType = lostDeviceMgmt.getRequestMode();
-        //RequestTypeHandler requestTypeSelection = requestType.equalsIgnoreCase(RequestTypeHandler.SINGLE) ? moiLostStolenSingleRequest : requestType.equalsIgnoreCase(RequestTypeHandler.BULK) ? null : null;
-        RequestTypeHandler requestTypeSelection = moiLostStolenSingleRequest;
-        logger.info("executed {} operation", requestType);
+        //RequestTypeHandler requestTypeSelection = requestType.equalsIgnoreCase(RequestTypeHandler.SINGLE) ? moiLostStolenSingleRequest : requestType.equalsIgnoreCase(RequestTypeHandler.BULK) ? moiLostStolenBulkRequest : null;
+        RequestTypeHandler requestTypeSelection = requestType.equalsIgnoreCase(ConfigurableParameter.SINGLE.getValue()) ? moiLostStolenSingleRequest : null;
         return requestTypeSelection;
     }
 }

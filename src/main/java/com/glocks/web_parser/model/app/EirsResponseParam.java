@@ -6,19 +6,24 @@ import lombok.Data;
 
 @Data
 @Entity
-@Table(name="eirs_response_param")
+@Table(name = "eirs_response_param")
 public class EirsResponseParam {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    @Column(name="language")
+    @Column(name = "language")
     String language;
 
     @Column(name = "tag")
 
     private String tag;
-    @Column(name="value")
+    @Column(name = "value")
     String value;
-    @Column(name="feature_name")
+    @Column(name = "feature_name")
     String featureName;
+
+    @Column(name = "description")
+    String description;
+
+
 }

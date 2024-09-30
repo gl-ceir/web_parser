@@ -1,10 +1,7 @@
 package com.glocks.web_parser.service.parser.moi.recover;
 
 import com.glocks.web_parser.config.AppConfig;
-import com.glocks.web_parser.model.app.BlackListHis;
-import com.glocks.web_parser.model.app.GreyListHis;
-import com.glocks.web_parser.model.app.LostDeviceDetailHis;
-import com.glocks.web_parser.model.app.LostDeviceMgmt;
+import com.glocks.web_parser.model.app.*;
 import com.glocks.web_parser.repository.app.*;
 import com.glocks.web_parser.service.parser.moi.utility.IMEISeriesModel;
 import com.glocks.web_parser.service.parser.moi.utility.MOIService;
@@ -31,9 +28,9 @@ public class MOIRecoverService {
     private final GreyListRepository greyListRepository;
     private final GreyListHisRepository greyListHisRepository;
     private final MOIService moiService;
-    static String runningImei = null;
+    private final WebActionDbRepository webActionDbRepository;
 
-    public boolean fileValidation(String filePath, LostDeviceMgmt lostDeviceMgmt) {
+    public boolean fileProcessing(String filePath, LostDeviceMgmt lostDeviceMgmt) {
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String record;
             IMEISeriesModel imeiSeriesModel = new IMEISeriesModel();
@@ -45,20 +42,18 @@ public class MOIRecoverService {
                         headerSkipped = true;
                     } else {
                         split = record.split(appConfig.getListMgmtFileSeparator(), -1);
-                        imeiSeriesModel.setImeiSeries(split);
-                        logger.info("LostDeviceMgmt : {}", imeiSeriesModel);
+                        imeiSeriesModel.setImeiSeries(split, "DEFAULT");
+                        logger.info("IMEISeriesModel : {}", imeiSeriesModel);
                         List<String> imeiList = moiService.imeiSeries.apply(imeiSeriesModel);
-                        if (imeiList.size() > 0) imeiList.forEach(imei -> {
-                            runningImei = imei;
-                            boolean isImeiValid = moiService.isNumericAndValid.test(imei);
-                            if (!isImeiValid) {
-                                logger.info("Invalid IMEI {}", imei);
-                            } else {
-                                blackListFlow(imei);
-                                greyListFlow(imei);
-                                lostDeviceDetailFlow(imei, lostDeviceMgmt);
-                            }
-                        });
+                        if (!imeiList.isEmpty()) actionAtRecord(lostDeviceMgmt, imeiList);
+/*                        if (imeiList.size() > 0) imeiList.forEach(imei -> {
+if (moiService.isNumericAndValid.test(imei)) {
+blackListFlow(imei);
+greyListFlow(imei);
+lostDeviceDetailFlow(imei, lostDeviceMgmt);
+
+} else logger.info("Invalid IMEI {}", imei);
+});*/
                     }
                 }
             }
@@ -71,6 +66,7 @@ public class MOIRecoverService {
 
 
     public void blackListFlow(String imei) {
+        logger.info("blackListFlow executed...");
         moiService.findBlackListByImei(imei).ifPresent(response -> {
             String source = response.getSource();
             int val = (int) moiService.sourceCount.apply(source).longValue();
@@ -93,6 +89,7 @@ public class MOIRecoverService {
     }
 
     public void greyListFlow(String imei) {
+        logger.info("greyListFlow executed...");
         moiService.findGreyListByImei(imei).ifPresent(response -> {
             String source = response.getSource();
             int val = (int) moiService.sourceCount.apply(source).longValue();
@@ -119,8 +116,27 @@ public class MOIRecoverService {
     public void lostDeviceDetailFlow(String imei, LostDeviceMgmt lostDeviceMgmt) {
         LostDeviceDetailHis lostDeviceDetailHis = LostDeviceDetailHis.builder().imei(imei).contactNumber(lostDeviceMgmt.getContactNumber()).requestId(lostDeviceMgmt.getLostId()).status("ADD").requestType("RECOVER").build();
         LostDeviceDetailHis save = moiService.save(lostDeviceDetailHis, lostDeviceDetailHisRepository::save);
-        if (save != null) lostDeviceDetailRepository.deleteByImeiAndStatusIn(imei, List.of("STOLEN", "LOST"));
+        if (save != null) {
+            int i = lostDeviceDetailRepository.deleteByImeiAndStatusIn(imei, List.of("STOLEN", "LOST"));
+            if (i > 0) logger.info("Record delete for IMEI {} from lost_device_detail", imei);
+            else logger.info("No such record found for delete operation against IMEI {}", imei);
+        }
     }
 
-
+    public void actionAtRecord(LostDeviceMgmt lostDeviceMgmt, List<String> imeiList) {
+        try {
+            for (String imei : imeiList) {
+                if (moiService.isNumericAndValid.test(imei)) {
+                    this.blackListFlow(imei);
+                    this.greyListFlow(imei);
+                    this.lostDeviceDetailFlow(imei, lostDeviceMgmt);
+                } else {
+                    logger.info("Invalid IMEI {}", imei);
+                }
+            }
+        } catch (Exception e) {
+            logger.info("Oops something break while running recover SINGLE request", e.getMessage());
+            e.printStackTrace();
+        }
+    }
 }

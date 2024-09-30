@@ -30,14 +30,15 @@ public class MOIFeature implements FeatureInterface {
             Optional<?> optional = Optional.empty();
             switch (subFeature) {
                 case "IMEI_SEARCH_RECOVERY" -> optional = moiService.findByTxnId(txnId);
-                case "STOLEN", "PENDING_VERIFICATION" -> optional = moiService.findByRequestId(txnId);
+                case "STOLEN", "LOST", "LOST/STOLEN", "PENDING_VERIFICATION" ->
+                        optional = moiService.findByRequestId(txnId);
                 case "RECOVER" -> optional = moiService.findByLostId(txnId);
             }
             optional.ifPresentOrElse(result -> {
                 consumer.accept(wb, result);
             }, () -> {
                 logger.info("No Txn ID {} found for furthure processing for subFeature {}", txnId, subFeature);
-                //  searchImeiByPoliceMgmtRepository.updateStatus("DONE", txnId, null);
+                // searchImeiByPoliceMgmtRepository.updateStatus("DONE", txnId, null);
                 webActionDbRepository.updateWebActionStatus(5, wb.getId());
                 logger.info("Updated status as DONE in web_action_db for txn id {} in subFeature {}", txnId, subFeature);
             });

@@ -17,12 +17,11 @@ public class PendingVerificationFeature {
     public void delegateInitRequest(WebActionDb webActionDb, LostDeviceMgmt lostDeviceMgmt) {
         RequestTypeHandler requestTypeHandler = checkType(lostDeviceMgmt);
         requestTypeHandler.executeInitProcess(webActionDb, lostDeviceMgmt);
+
     }
 
     public RequestTypeHandler checkType(LostDeviceMgmt lostDeviceMgmt) {
-        String requestType = lostDeviceMgmt.getRequestMode();
         RequestTypeHandler requestTypeSelection = pendingVerificationRequest;
-        logger.info("executed {} operation", requestType);
         return requestTypeSelection;
     }
 }

@@ -2,6 +2,7 @@ package com.glocks.web_parser.service.parser.moi.imeisearchrecovery;
 
 import com.glocks.web_parser.model.app.SearchImeiByPoliceMgmt;
 import com.glocks.web_parser.model.app.WebActionDb;
+import com.glocks.web_parser.service.parser.moi.utility.ConfigurableParameter;
 import com.glocks.web_parser.service.parser.moi.utility.RequestTypeHandler;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
@@ -18,25 +19,27 @@ public class IMEISearchRecoverySubFeature {
 
     public void delegateInitRequest(WebActionDb webActionDb, SearchImeiByPoliceMgmt searchImeiByPoliceMgmt) {
         RequestTypeHandler requestTypeHandler = checkType(searchImeiByPoliceMgmt);
-        requestTypeHandler.executeInitProcess(webActionDb, searchImeiByPoliceMgmt);
+        if (requestTypeHandler != null)
+            requestTypeHandler.executeInitProcess(webActionDb, searchImeiByPoliceMgmt);
+        else logger.info("Invalid request mode");
     }
 
     public RequestTypeHandler checkType(SearchImeiByPoliceMgmt searchImeiByPoliceMgmt) {
         String requestType = searchImeiByPoliceMgmt.getRequestMode();
-        RequestTypeHandler requestTypeSelection = requestType.equalsIgnoreCase(RequestTypeHandler.SINGLE) ? imeiSearchRecoverySingleRequest : requestType.equalsIgnoreCase(RequestTypeHandler.BULK) ? imeiSearchRecoveryBulkRequest : null;
+        RequestTypeHandler requestTypeSelection = requestType.equalsIgnoreCase(ConfigurableParameter.SINGLE.getValue()) ? imeiSearchRecoverySingleRequest : requestType.equalsIgnoreCase(ConfigurableParameter.BULK.getValue()) ? imeiSearchRecoveryBulkRequest : null;
         logger.info("executed {} operation", requestType);
         return requestTypeSelection;
     }
 
-    /*
-    public void delegateValidateRequest(WebActionDb webActionDb, SearchImeiByPoliceMgmt searchImeiByPoliceMgmt) {
-    RequestTypeHandler requestTypeAction = checkType(searchImeiByPoliceMgmt);
-    requestTypeAction.executeValidateProcess(webActionDb, searchImeiByPoliceMgmt);
-    }
+/*
+public void delegateValidateRequest(WebActionDb webActionDb, SearchImeiByPoliceMgmt searchImeiByPoliceMgmt) {
+RequestTypeHandler requestTypeAction = checkType(searchImeiByPoliceMgmt);
+requestTypeAction.executeValidateProcess(webActionDb, searchImeiByPoliceMgmt);
+}
 
-    public void delegateExecuteProcess(WebActionDb webActionDb, SearchImeiByPoliceMgmt searchImeiByPoliceMgmt) {
-    RequestTypeHandler requestTypeAction = checkType(searchImeiByPoliceMgmt);
-    requestTypeAction.executeProcess(webActionDb, searchImeiByPoliceMgmt);
-    }
-    */
+public void delegateExecuteProcess(WebActionDb webActionDb, SearchImeiByPoliceMgmt searchImeiByPoliceMgmt) {
+RequestTypeHandler requestTypeAction = checkType(searchImeiByPoliceMgmt);
+requestTypeAction.executeProcess(webActionDb, searchImeiByPoliceMgmt);
+}
+*/
 }

@@ -18,4 +18,5 @@ public interface EirsResponseParamRepository extends JpaRepository<EirsResponseP
 
     List<EirsResponseParam> findByFeatureNameIn(List<String> module);
 
+    public EirsResponseParam getByTagAndLanguage(String tag, String language);
 }

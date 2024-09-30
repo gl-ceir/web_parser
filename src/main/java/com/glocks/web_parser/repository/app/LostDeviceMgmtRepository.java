@@ -23,6 +23,7 @@ public interface LostDeviceMgmtRepository extends JpaRepository<LostDeviceMgmt, 
     @Query("UPDATE LostDeviceMgmt x SET x.status =:status WHERE x.requestId =:requestId")
     public int updateStatus(String status, String requestId);
 
+/*
     Boolean existsByImei1AndStatusIn(String imeiValue, List<String> status);
 
     Boolean existsByImei2AndStatusIn(String imeiValue, List<String> status);
@@ -30,4 +31,10 @@ public interface LostDeviceMgmtRepository extends JpaRepository<LostDeviceMgmt, 
     Boolean existsByImei3AndStatusIn(String imeiValue, List<String> status);
 
     Boolean existsByImei4AndStatusIn(String imeiValue, List<String> status);
+*/
+
+    @Query("SELECT COUNT(e) FROM LostDeviceMgmt e WHERE " +
+            "(e.imei1 = :imei OR e.imei2 = :imei OR e.imei3 = :imei OR e.imei4 = :imei) " +
+            "AND e.status IN (:statuses)")
+    long existsByImeiAndStatusIn(String imei, List<String> statuses);
 }

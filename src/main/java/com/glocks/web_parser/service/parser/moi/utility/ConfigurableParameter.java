@@ -4,14 +4,26 @@ import lombok.Getter;
 
 @Getter
 public enum ConfigurableParameter {
-    ALERT_IMEI_SEARCH_RECOVERY("alert00001"),
-    ALERT_LOST_STOLEN("alert00001"),
-    ALERT_PENDING_VERIFICATION("alert00001"),
-    PENDING_VERIFICATION_FEATURE("MOI"),
-    PENDING_VERIFICATION_TAG("MOI_PENDING_VERIFICATION_MSG"),
-    ALERT_RECOVER("alert00001"),
+    SINGLE("SINGLE"),
+
+    BULK("BULK"),
+
+    ALERT_IMEI_SEARCH_RECOVERY("Alert8005"),
+
+    ALERT_LOST_STOLEN("Alert8005"),
+
+    ALERT_PENDING_VERIFICATION("Alert8005"),
+
+    ALERT_RECOVER("Alert8005"),
+
     PENDING_VERIFICATION_STAGE_INIT("0"),
-    PENDING_VERIFICATION_STAGE_DONE("1");
+
+    PENDING_VERIFICATION_STAGE_DONE("1"),
+
+    STOLEN_NOTIFICATION("STOLEN"),
+
+    STOLEN_TAG_NOTIFICATION("stolen_success");
+
     private String value;
 
     private ConfigurableParameter(String value) {

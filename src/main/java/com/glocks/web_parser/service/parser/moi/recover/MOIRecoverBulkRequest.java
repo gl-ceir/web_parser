@@ -54,13 +54,9 @@ public class MOIRecoverBulkRequest implements RequestTypeHandler<LostDeviceMgmt>
 
     @Override
     public void executeProcess(WebActionDb webActionDb, LostDeviceMgmt lostDeviceMgmt) {
-        String transactionId = map.get("transactionId");
-        String uploadedFilePath = map.get("uploadedFilePath");
-        boolean isFileProcessingPass = moiRecoverService.fileValidation(uploadedFilePath, lostDeviceMgmt);
-        if (isFileProcessingPass) {
-            moiService.updateStatusInLostDeviceMgmt("Done", transactionId);
-            webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
-        }
+        moiRecoverService.fileProcessing(map.get("uploadedFilePath"), lostDeviceMgmt);
+        moiService.updateStatusInLostDeviceMgmt("DONE", lostDeviceMgmt.getLostId());
+        webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
     }
 
 }

@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import javax.swing.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -32,7 +33,7 @@ public class MOILostStolenSingleRequest implements RequestTypeHandler<LostDevice
     private final BlackListHisRepository blackListHisRepository;
     private final GreyListHisRepository greyListHisRepository;
     private final GreyListRepository greyListRepository;
-    DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+    private final MOILostStolenService moiLostStolenService;
     static int greyListDuration;
 
     @Override
@@ -47,7 +48,7 @@ public class MOILostStolenSingleRequest implements RequestTypeHandler<LostDevice
             greyListDuration = Integer.parseInt(moiService.greyListDuration());
             executeProcess(webActionDb, lostDeviceMgmt);
         } catch (NumberFormatException e) {
-            logger.info("Invalid value found for GREY_LIST_DURATION tag");
+            logger.info("Invalid GREY_LIST_DURATION value");
         }
     }
 
@@ -61,16 +62,23 @@ public class MOILostStolenSingleRequest implements RequestTypeHandler<LostDevice
             logger.info("IMEISeriesModel {}", imeiSeriesModel);
             List<String> imeiList = moiService.imeiSeries.apply(imeiSeriesModel);
             if (!imeiList.isEmpty()) imeiList.forEach(imei -> {
-                if (greyListDuration == 0) moiService.greyListDurationIsZero(imei, "Single", lostDeviceMgmt);
-                else if (greyListDuration > 0)
-                    moiService.greyListDurationGreaterThanZero(greyListDuration, imei, "Single", lostDeviceMgmt);
-                else logger.info("pass a valid 'GREY_LIST_DURATION' tag value");
+                if (!moiService.isNumericAndValid(imei)) {
+                    logger.info("Invalid IMEI {} found", imei);
+                } else {
+                    moiLostStolenService.recordProcess(imei, lostDeviceMgmt, deviceLostDateTime, "SINGLE", greyListDuration);
+                }
             });
-            Consumer<String> imeiPairDetail = moiService::imeiPairDetail;
-            imeiPairDetail.accept(deviceLostDateTime);
-            BiConsumer<String, String> updateStatusInLostDeviceMgmt = moiService::updateStatusInLostDeviceMgmt;
-            updateStatusInLostDeviceMgmt.accept("DONE", lostDeviceMgmt.getRequestId());
-            webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
+
+
+/*            if (!imeiList.isEmpty()) imeiList.forEach(imei -> {
+if (greyListDuration == 0) moiService.greyListDurationIsZero(imei, "Single", lostDeviceMgmt);
+else if (greyListDuration > 0)
+moiService.greyListDurationGreaterThanZero(greyListDuration, imei, "Single", lostDeviceMgmt);
+else logger.info("pass a valid 'GREY_LIST_DURATION' tag value");
+});
+moiService.imeiPairDetail(deviceLostDateTime);
+moiService.updateStatusInLostDeviceMgmt("DONE", lostDeviceMgmt.getRequestId());
+webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());*/
         } else {
             logger.info("Invalid deviceLostDateTime value {}", deviceLostDateTime);
         }

@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -25,13 +26,10 @@ import java.util.stream.Stream;
 public class MOIService {
     private Logger logger = LogManager.getLogger(this.getClass());
     private final LostDeviceDetailRepository lostDeviceDetailRepository;
-    private final LostDeviceDetailHisRepository lostDeviceDetailHisRepository;
     private final SearchImeiByPoliceMgmtRepository searchImeiByPoliceMgmtRepository;
     private final LostDeviceMgmtRepository lostDeviceMgmtRepository;
     private final MDRRepository mdrRepository;
     private final SearchImeiDetailByPoliceRepository searchImeiDetailByPoliceRepository;
-    private final WebActionDbRepository webActionDbRepository;
-    private final AppConfig appConfig;
     private final BlackListRepository blackListRepository;
     private final BlackListHisRepository blackListHisRepository;
     private final GreyListRepository greyListRepository;
@@ -40,7 +38,6 @@ public class MOIService {
     private final ImeiPairDetailHisRepository imeiPairDetailHisRepository;
     private final Validation validation;
     private final SysParamRepository sysParamRepository;
-    static String runningImei = null;
 
     public Optional<SearchImeiByPoliceMgmt> findByTxnId(String txnId) {
         Optional<SearchImeiByPoliceMgmt> response = searchImeiByPoliceMgmtRepository.findByTransactionId(txnId);
@@ -119,12 +116,6 @@ public class MOIService {
         return count == 3 ? false : true;
     }
 
-    public List<String> imeiList(IMEISeriesModel imeiSeriesModel) {
-        List<String> collect = Stream.of(imeiSeriesModel).flatMap(x -> Stream.of(x.getImei1(), x.getImei2(), x.getImei3(), x.getImei4())).filter(Objects::nonNull).collect(Collectors.toList());
-        logger.info("Non-null IMEI list {}", collect);
-        return collect;
-    }
-
     public List<String> tacList(IMEISeriesModel imeiSeriesModel) {
         String[] arr = {imeiSeriesModel.getImei1(), imeiSeriesModel.getImei2(), imeiSeriesModel.getImei3(), imeiSeriesModel.getImei4()};
         List<String> tacList = Stream.of(arr).filter(Objects::nonNull).filter(x -> x.length() > 8).map(imei -> imei.substring(0, 8)).collect(Collectors.toList());
@@ -175,9 +166,8 @@ public class MOIService {
     public LocalDateTime expiryDate(int daysToAdd) {
         LocalDateTime currentDateTime = LocalDateTime.now();
         LocalDateTime expiryDate = currentDateTime.plusDays(daysToAdd);
-
 /*        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
+String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
         return expiryDate;
     }
 
@@ -185,26 +175,50 @@ public class MOIService {
         return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     }
 
-    public void imeiPairDetail(String createdOn) {
-        imeiPairDetailRepository.findByCreatedOnGreaterThanEqual(createdOn).ifPresentOrElse(imeiPairDetailList -> {
-                    logger.info("ImeiPairDetail list {}", imeiPairDetailList);
-                    imeiPairDetailList.forEach(list -> {
-                        ImeiPairDetailHis imeiPairDetailHis = new ImeiPairDetailHis();
-                        BeanUtils.copyProperties(list, imeiPairDetailHis);
-                        imeiPairDetailHis.setAction("DELETE");
-                        imeiPairDetailHis.setActionRemark("MOI");
-                        logger.info("ImeiPairDetailHis {}", imeiPairDetailHis);
-                        ImeiPairDetailHis savedEntity = save(imeiPairDetailHis, imeiPairDetailHisRepository::save);
-                        if (savedEntity != null) {
-                            imeiPairDetailRepository.deleteById(Math.toIntExact(list.getId()));
-                        }
-                        LostDeviceDetail lostDeviceDetail = LostDeviceDetail.builder().imei(list.getImei()).contactNumber(list.getMsisdn()).requestId(list.getTxnId()).status("DONE").requestType("LOST/STOLEN").build();
-                        logger.info("lostDeviceDetail {}", lostDeviceDetail);
-                        save(lostDeviceDetail, lostDeviceDetailRepository::save);
+    public boolean isDateFormatValid(String createdOn) {
+        try {
+            LocalDateTime.parse(createdOn, dateFormatter());
+        } catch (DateTimeParseException e) {
+            logger.info("Invalid format received for deviceLostDateTime {} ,Expected format: yyyy-MM-dd HH:mm:ss", createdOn);
+            return false;
+        }
+        return true;
+    }
 
-                    });
-                },
-                () -> logger.info("No result found for created_on {}", createdOn));
+    public void imeiPairDetail(String createdOn, String mode) {
+
+        imeiPairDetailRepository.findByCreatedOnGreaterThanEqual(createdOn).ifPresentOrElse(imeiPairDetailList -> {
+            logger.info("ImeiPairDetail list {}", imeiPairDetailList);
+            imeiPairDetailList.forEach(list -> {
+                ImeiPairDetailHis imeiPairDetailHis = new ImeiPairDetailHis();
+                BeanUtils.copyProperties(list, imeiPairDetailHis);
+                imeiPairDetailHis.setAction("DELETE");
+                imeiPairDetailHis.setActionRemark("MOI");
+                logger.info("ImeiPairDetailHis {}", imeiPairDetailHis);
+                ImeiPairDetailHis savedEntity = save(imeiPairDetailHis, imeiPairDetailHisRepository::save);
+                if (savedEntity != null) {
+                    imeiPairDetailRepository.deleteById(Math.toIntExact(list.getId()));
+                }
+
+                if (mode.equalsIgnoreCase("SINGLE")) {
+                    LostDeviceDetail lostDeviceDetail = LostDeviceDetail.builder().imei(list.getImei()).contactNumber(list.getMsisdn()).requestId(list.getTxnId()).status("DONE").requestType("LOST/STOLEN").build();
+                    logger.info("lostDeviceDetail {}", lostDeviceDetail);
+                    LostDeviceDetail save = save(lostDeviceDetail, lostDeviceDetailRepository::save);
+                    if (save != null) {
+                        logger.info("Record inserted for imei {} in lost_device_detail", list.getImei());
+                    } else {
+                        logger.info("Failed to insert record for imei {} in lost_device_detail", list.getImei());
+                    }
+                }
+                if (mode.equalsIgnoreCase("BULK")) {
+                    if (lostDeviceDetailRepository.updateStatus("DONE", list.getImei()) > 0) {
+                        logger.info("Record updated for imei {} in lost_device_detail", list.getImei());
+                    } else {
+                        logger.info("Failed to update record for imei {} in lost_device_detail", list.getImei());
+                    }
+                }
+            });
+        }, () -> logger.info("No result found for created_on {}", createdOn));
     }
 
     public String getTacFromIMEI(String imei) {
@@ -221,8 +235,7 @@ public class MOIService {
             String source = remove(blackList.getSource());
             if (Objects.isNull(source)) updateSource("MOI", imei, "BLACK_LIST");
             else {
-                if (!source.equalsIgnoreCase("MOI"))
-                    updateSource(source + "MOI", imei, "BLACK_LIST");
+                if (!source.equalsIgnoreCase("MOI")) updateSource(source + "MOI", imei, "BLACK_LIST");
             }
         }, () -> {
             BlackList blackList = new BlackList();
@@ -286,22 +299,10 @@ public class MOIService {
         lostDeviceMgmtRepository.updateStatus(status, requestId);
     }
 
-/*
-    public boolean isMultipleIMEIExist(LostDeviceMgmt lostDeviceMgmt) {
-        long count = Stream.of(lostDeviceMgmt).flatMap(x -> Stream.of(x.getImei2(), x.getImei3(), x.getImei4())).filter(String::isBlank).count();
-        logger.info("No. of IMEI's found empty {}", count);
-        return count == 3 ? false : true;
-    }
-
-   public Function<LostDeviceMgmt, List<String>> imeiList = (lostDeviceMgmt) -> {
-        List<String> collect = Stream.of(lostDeviceMgmt).flatMap(x -> Stream.of(x.getImei1(), x.getImei2(), x.getImei3(), x.getImei4())).filter(Objects::nonNull).collect(Collectors.toList());
-        logger.info("Non-null IMEI list {}", collect);
-        return collect;
-    };*/
-
     public Function<IMEISeriesModel, List<String>> imeiSeries = (imeiSeries) -> {
-        List<String> collect = Stream.of(imeiSeries).flatMap(x -> Stream.of(x.getImei1(), x.getImei2(), x.getImei3(), x.getImei4())).filter(Objects::nonNull).collect(Collectors.toList());
-        logger.info("Non-null IMEI list {}", collect);
+        List<String> collect = Stream.of(imeiSeries).flatMap(x -> Stream.of(x.getImei1(), x.getImei2(), x.getImei3(), x.getImei4())).filter(imei -> imei != null && !imei.isEmpty()).collect(Collectors.toList());
+        if (collect == null) logger.info("No IMEI present");
+        else logger.info("Non-null IMEI list {}", collect);
         return collect;
     };
 
@@ -331,10 +332,6 @@ public class MOIService {
     public String joiner(String[] split, String status) {
         return Arrays.stream(split).collect(Collectors.joining(",")) + status;
     }
-
-    /*     updateStatusInLostDeviceMgmt("Done", transactionId);
-         webActionDbRepository.updateWebActionStatus(5, id);*/
-
 
     public void invalidFile(String header, PrintWriter printWriter) {
         printWriter.println(header + ",Invalid Format");
@@ -368,47 +365,4 @@ public class MOIService {
         } else logger.info("source value is null");
         return null;
     }
-
-
-
-/*    public void updateStatus(String status, String txnId, String failReason) {
-        logger.info("updated SearchImeiByPoliceMgmt with status {} and txnId {}", status, txnId);
-        searchImeiByPoliceMgmtRepository.updateStatus(status, txnId, failReason);
-    }*/
-
-
-/*
-    public boolean requestIdDetails(String requestID, String transactionId, WebActionDb webActionDb) {
-
- */
-/*       return findByImei(imei).map(requestId -> {
-            logger.info("found requestId {} for IMEI {}", requestId, imei);
-            int i = copyLostDeviceMgmtToSearchIMEIDetailByPolice(requestId);
-            if (i > 0) {
-                updateStatusAndCountFoundInLost("DONE", 1, transactionId, null);
-                logger.info("updated record with status as DONE and count_found_in _lost as 1 for Txn ID {}", transactionId);
-                webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
-                return true;
-            }
-            return false;
-        }).orElse(false);*//*
-
-        return false;
-    }
-*/
-
-
-        /*    public List<String> imeiList(IMEISeriesModel imeiSeriesModel) {
-            List<String> collect = Stream.of(imeiSeriesModel).flatMap(x -> Stream.of(x.getImei1(), x.getImei2(), x.getImei3(), x.getImei4())).filter(Objects::nonNull).collect(Collectors.toList());
-            logger.info("Non-null IMEI list {}", collect);
-            return collect;
-        }
-    public <T> List<String> imeiList(T t, Function<T, List<String>> imeiExtractor) {
-        List<String> imeiList = imeiExtractor.apply(t).stream()
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        logger.info("Non-null IMEI list {}", imeiList);
-        return imeiList;
-    }
-*/
 }

@@ -3,6 +3,7 @@ package com.glocks.web_parser.repository.app;
 import com.glocks.web_parser.model.app.LostDeviceDetail;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -24,4 +25,8 @@ public interface LostDeviceDetailRepository extends JpaRepository<LostDeviceDeta
     int deleteByImeiAndStatusIn(String imei, List<String> status);
 
     Boolean existsByImei(String imei);
+
+    @Modifying
+    @Query("UPDATE LostDeviceDetail x SET x.status =:status WHERE x.imei =:imei")
+    public int updateStatus(String status, String imei);
 }

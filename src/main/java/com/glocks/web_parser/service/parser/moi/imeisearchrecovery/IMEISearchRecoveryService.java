@@ -36,7 +36,7 @@ public class IMEISearchRecoveryService {
     }
 
 
-    public boolean isRequestIdFound(String imei, String imeiNumber, WebActionDb webActionDb, String transactionId, String requestID, String mode, int successCount) {
+    public boolean isRequestIdFound(String imei, WebActionDb webActionDb, String transactionId, String requestID, String mode, int successCount) {
         boolean isCopiedRecordLostDeviceMgmtToSearchIMEIDetailByPolice = moiService.copyRecordLostDeviceMgmtToSearchIMEIDetailByPolice(requestID);
         if (isCopiedRecordLostDeviceMgmtToSearchIMEIDetailByPolice)
             logger.info("Record saved in search_imei_detail_by_police for IMEI {} and  request_id {}", imei, requestID);
@@ -62,13 +62,13 @@ public class IMEISearchRecoveryService {
         int successCount = 0;
         boolean isLostDeviceDetailExist = false;
         logger.info("IMEISeriesModel {}", imeiSeriesModel);
-        List<String> imeiList = moiService.imeiList(imeiSeriesModel);
+        List<String> imeiList = moiService.imeiSeries.apply(imeiSeriesModel);
         if (!imeiList.isEmpty()) {
             try {
                 for (String imei : imeiList) {
                     Optional<LostDeviceDetail> LostDeviceDetailOptional = moiService.findByImeiAndStatusAndRequestType(imei);
                     if (LostDeviceDetailOptional.isPresent()) {
-                        boolean isCopiedRecordLostDeviceMgmtToSearchIMEIDetailByPolice = this.isRequestIdFound(imei, imeiSeriesModel.getMap().get(imei), webActionDb, transactionId, LostDeviceDetailOptional.get().getRequestId(), "SINGLE", 1);
+                        boolean isCopiedRecordLostDeviceMgmtToSearchIMEIDetailByPolice = this.isRequestIdFound(imei, webActionDb, transactionId, LostDeviceDetailOptional.get().getRequestId(), "SINGLE", 1);
                         if (isCopiedRecordLostDeviceMgmtToSearchIMEIDetailByPolice) {
                             if (mode.equalsIgnoreCase("BULK")) {
                                 printWriter.println(moiService.joiner(split, ",Found"));

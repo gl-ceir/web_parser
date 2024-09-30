@@ -35,7 +35,7 @@ public class MOIRecoverSingleRequest implements RequestTypeHandler<LostDeviceMgm
         IMEISeriesModel imeiSeriesModel = new IMEISeriesModel();
         BeanUtils.copyProperties(lostDeviceMgmt, imeiSeriesModel);
         imeiList = moiService.imeiSeries.apply(imeiSeriesModel);
-        if (imeiList.isEmpty()) {
+        if (!imeiList.isEmpty()) {
             logger.info("No IMEI found for txn id {}", webActionDb.getTxnId());
             return;
         }
@@ -44,7 +44,10 @@ public class MOIRecoverSingleRequest implements RequestTypeHandler<LostDeviceMgm
 
     @Override
     public void executeProcess(WebActionDb webActionDb, LostDeviceMgmt lostDeviceMgmt) {
-        try {
+        moiRecoverService.actionAtRecord(lostDeviceMgmt, imeiList);
+        moiService.updateStatusInLostDeviceMgmt("DONE", lostDeviceMgmt.getLostId());
+        webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
+ /*       try {
             String lostId = lostDeviceMgmt.getLostId();
             imeiList.forEach(imei -> {
                 moiRecoverService.blackListFlow(imei);
@@ -55,6 +58,6 @@ public class MOIRecoverSingleRequest implements RequestTypeHandler<LostDeviceMgm
             webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
         } catch (Exception e) {
             logger.info("Oops something break while running recover single request", e.getMessage());
-        }
+        }*/
     }
 }

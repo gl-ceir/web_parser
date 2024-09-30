@@ -13,8 +13,8 @@ import java.util.Optional;
 @Repository
 @Transactional(rollbackOn = {SQLException.class})
 public interface DuplicateDeviceDetailRepository extends JpaRepository<DuplicateDeviceDetail, Long> {
-    Boolean existsByImeiAndMsisdnNull(String imei);
-
+    Boolean existsByImeiAndMsisdnIsNull(String imei);
+    Boolean existsByImei(String imei);
    Boolean existsByImeiAndStatusIgnoreCaseEquals(String imei, String status);
  //   Optional<List<DuplicateDeviceDetail>> findByImeiAndStatusIgnoreCaseEquals(String imei, String status);
 }

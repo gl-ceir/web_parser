@@ -53,7 +53,7 @@ public class IMEISearchRecoveryBulkRequest implements RequestTypeHandler<SearchI
         logger.info("Uploaded file path is {}", uploadedFilePath);
         if (!fileOperations.checkFileExists(uploadedFilePath)) {
             logger.error("Uploaded file does not exists in path {} for transactionId {}", uploadedFilePath, transactionId);
-            alertService.raiseAnAlert(transactionId, ConfigurableParameter.ALERT_IMEI_SEARCH_RECOVERY.getValue(), "MOI Recover", uploadedFileName + " with transaction id " + transactionId, 0);
+            alertService.raiseAnAlert(transactionId, ConfigurableParameter.ALERT_IMEI_SEARCH_RECOVERY.getValue(), "MOI Search Recovery", uploadedFileName + " with transaction id " + transactionId, 0);
             return;
         }
         map.put("uploadedFileName", uploadedFileName);
@@ -73,7 +73,6 @@ public class IMEISearchRecoveryBulkRequest implements RequestTypeHandler<SearchI
         String processedFileName = transactionId + ".csv";
         String processedFilePath = moiPath + "/" + transactionId + "/" + processedFileName;
         logger.info("Processed file path is {}", processedFilePath);
-        // create a file
         PrintWriter printWriter = moiService.file(processedFilePath);
         try (BufferedReader reader = new BufferedReader(new FileReader(uploadedFilePath))) {
             String record;
@@ -85,12 +84,11 @@ public class IMEISearchRecoveryBulkRequest implements RequestTypeHandler<SearchI
                 if (!record.trim().isEmpty()) {
                     if (!headerSkipped) {
                         header = record.split(appConfig.getListMgmtFileSeparator(), -1);
-                        //printWriter.println(moiService.joiner(header, ",Reason"));
                         printWriter.println(moiService.joiner(header, ""));
                         headerSkipped = true;
                     } else {
                         split = record.split(appConfig.getListMgmtFileSeparator(), -1);
-                        imeiSeriesModel.setImeiSeries(split);
+                        imeiSeriesModel.setImeiSeries(split, "DEFAULT");
                         logger.info("IMEISeriesModel {}", imeiSeriesModel);
 
                         boolean isImeiValid = Stream.of(split).allMatch(imei -> moiService.isNumericAndValid(imei));
@@ -107,33 +105,33 @@ public class IMEISearchRecoveryBulkRequest implements RequestTypeHandler<SearchI
                             int count = imeiSearchRecoveryService.actionAtRecord(imeiSeriesModel, webActionDb, transactionId, printWriter, "BULK", split);
                             successCount += count;
 /*                            List<String> imeiList = moiService.imeiList(imeiSeriesModel);
-                            boolean isLostDeviceDetailExist = false;
-                            if (!imeiList.isEmpty()) {
-                                try {
-                                    for (String imei : imeiList) {
-                                        Optional<LostDeviceDetail> LostDeviceDetailOptional = moiService.findByImeiAndStatusAndRequestType(imei);
-                                        if (LostDeviceDetailOptional.isPresent()) {
-                                            boolean isCopiedRecordLostDeviceMgmtToSearchIMEIDetailByPolice = imeiSearchRecoveryService.isRequestIdFound(imei, imeiSeriesModel.getMap().get(imei), webActionDb, transactionId, LostDeviceDetailOptional.get().getRequestId(), "BULK", 0);
-                                            if (isCopiedRecordLostDeviceMgmtToSearchIMEIDetailByPolice) {
-                                                printWriter.println(moiService.joiner(split, ",Found"));
-                                                successCount++;
-                                                isLostDeviceDetailExist = true;
-                                                break;
-                                            }
-                                        }
-                                    }
+boolean isLostDeviceDetailExist = false;
+if (!imeiList.isEmpty()) {
+try {
+for (String imei : imeiList) {
+Optional<LostDeviceDetail> LostDeviceDetailOptional = moiService.findByImeiAndStatusAndRequestType(imei);
+if (LostDeviceDetailOptional.isPresent()) {
+boolean isCopiedRecordLostDeviceMgmtToSearchIMEIDetailByPolice = imeiSearchRecoveryService.isRequestIdFound(imei, imeiSeriesModel.getMap().get(imei), webActionDb, transactionId, LostDeviceDetailOptional.get().getRequestId(), "BULK", 0);
+if (isCopiedRecordLostDeviceMgmtToSearchIMEIDetailByPolice) {
+printWriter.println(moiService.joiner(split, ",Found"));
+successCount++;
+isLostDeviceDetailExist = true;
+break;
+}
+}
+}
 
-                                    if (!isLostDeviceDetailExist) {
-                                        imeiSearchRecoveryService.isLostDeviceDetailEmpty(webActionDb, transactionId);
-                                        printWriter.println(moiService.joiner(split, ",Not Found"));
-                                    }
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                    moiService.updateStatusAndCountFoundInLost("Fail", 0, transactionId, "Please try after some time");
-                                    //      webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
-                                    logger.info("Oops!, error occur while execution {}", e.getMessage());
-                                }
-                            }*/
+if (!isLostDeviceDetailExist) {
+imeiSearchRecoveryService.isLostDeviceDetailEmpty(webActionDb, transactionId);
+printWriter.println(moiService.joiner(split, ",Not Found"));
+}
+} catch (Exception e) {
+e.printStackTrace();
+moiService.updateStatusAndCountFoundInLost("Fail", 0, transactionId, "Please try after some time");
+//      webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
+logger.info("Oops!, error occur while execution {}", e.getMessage());
+}
+}*/
                         }
                     }
                 }
@@ -141,8 +139,8 @@ public class IMEISearchRecoveryBulkRequest implements RequestTypeHandler<SearchI
             logger.info("successCount {}", successCount);
             printWriter.close();
             moiService.updateStatusAndCountFoundInLost("DONE", successCount, transactionId, null);
-            logger.info("updated record with status as DONE and count_found_in _lost as 1 for Txn ID {}", transactionId);
-            // webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
+            logger.info("updated record with status as DONE and count_found_in _lost as {} for Txn ID {}", successCount, transactionId);
+            webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
         } catch (Exception ex) {
             logger.error("Exception in processing the file " + ex.getMessage());
         }
