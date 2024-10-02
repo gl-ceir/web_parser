@@ -46,14 +46,6 @@ public class MOIRecoverService {
                         logger.info("IMEISeriesModel : {}", imeiSeriesModel);
                         List<String> imeiList = moiService.imeiSeries.apply(imeiSeriesModel);
                         if (!imeiList.isEmpty()) actionAtRecord(lostDeviceMgmt, imeiList);
-/*                        if (imeiList.size() > 0) imeiList.forEach(imei -> {
-if (moiService.isNumericAndValid.test(imei)) {
-blackListFlow(imei);
-greyListFlow(imei);
-lostDeviceDetailFlow(imei, lostDeviceMgmt);
-
-} else logger.info("Invalid IMEI {}", imei);
-});*/
                     }
                 }
             }
@@ -118,8 +110,8 @@ lostDeviceDetailFlow(imei, lostDeviceMgmt);
         LostDeviceDetailHis save = moiService.save(lostDeviceDetailHis, lostDeviceDetailHisRepository::save);
         if (save != null) {
             int i = lostDeviceDetailRepository.deleteByImeiAndStatusIn(imei, List.of("STOLEN", "LOST"));
-            if (i > 0) logger.info("Record delete for IMEI {} from lost_device_detail", imei);
-            else logger.info("No such record found for delete operation against IMEI {}", imei);
+            if (i > 0) logger.info("record delete for IMEI {} from lost_device_detail", imei);
+            else logger.info("No record found for delete operation against IMEI {}", imei);
         }
     }
 

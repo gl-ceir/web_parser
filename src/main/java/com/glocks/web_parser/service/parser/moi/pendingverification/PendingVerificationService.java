@@ -11,6 +11,7 @@ import com.glocks.web_parser.service.parser.moi.utility.MOIService;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
@@ -33,8 +34,8 @@ public class PendingVerificationService {
     private final WebActionDbRepository webActionDbRepository;
     private final NotificationForPendingVerification notificationForPendingVerification;
     static int failCount, i = 0;
-    List<LostDeviceDetail> lostDeviceDetailPayload = new LinkedList<>();
-    Set<String> set = new LinkedHashSet<>();
+    Set<LostDeviceDetail> set = new LinkedHashSet<>();
+    boolean isFileRunWithoutAnyError = true;
 
     public boolean pendingVerificationFileValidation(String filePath, LostDeviceMgmt lostDeviceMgmt, PrintWriter printWriter, String state) {
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
@@ -44,68 +45,69 @@ public class PendingVerificationService {
             IMEISeriesModel imeiSeriesModel = new IMEISeriesModel();
             String[] split;
             while ((record = reader.readLine()) != null) {
-                try {
-                    if (!record.trim().isEmpty()) {
-                        if (!headerSkipped) {
-                            header = record.split(appConfig.getListMgmtFileSeparator(), -1);
-                            headerSkipped = true;
-//printWriter.println(moiService.joiner(header, ",Reason"));
-                            if (state.equalsIgnoreCase("0")) printWriter.println(moiService.joiner(header, ""));
-                        } else {
-                            split = record.split(appConfig.getListMgmtFileSeparator(), -1);
-                            imeiSeriesModel.setImeiSeries(split, "STOLEN");
-                            logger.info("IMEISeriesModel {}", imeiSeriesModel);
-                            List<String> imeiList = moiService.imeiSeries.apply(imeiSeriesModel);
-                            if (!imeiList.isEmpty()) {
-                                for (String imei : imeiList) {
-                                    if (state.equalsIgnoreCase("0"))
-                                        if (!isConditionFulfil(imei, printWriter, split)) break;
-                                }
-                            }
-                            logger.info("row {} <<>> failCount {}", ++i, failCount);
-                            if (state.equalsIgnoreCase("1")) {
-                                printSuccessRecord(split, printWriter);
-                            }
+                if (!record.trim().isEmpty()) {
+                    if (!headerSkipped) {
+                        header = record.split(appConfig.getListMgmtFileSeparator(), -1);
+                        headerSkipped = true;
+                        if (state.equalsIgnoreCase("0"))
+                            printWriter.println(moiService.joiner(header, ",Status,Reason"));
+                    } else {
+                        split = record.split(appConfig.getListMgmtFileSeparator(), -1);
+                        imeiSeriesModel.setImeiSeries(split, "STOLEN");
+                        List<String> imeiList = moiService.imeiSeries.apply(imeiSeriesModel);
+                        if (!imeiList.isEmpty()) {
+                            action(split, printWriter, state, imeiList, lostDeviceMgmt);
                         }
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    logger.info("Exception occured inside while block {}", e.getMessage());
                 }
             }
-
-            if (state.equalsIgnoreCase("1")) {
-                LostDeviceDetail lostDeviceDetail = LostDeviceDetail.builder().requestId(lostDeviceMgmt.getRequestId()).contactNumber(lostDeviceMgmt.getContactNumberForOtp()).deviceBrand(lostDeviceMgmt.getDeviceBrand()).deviceModel(lostDeviceMgmt.getDeviceModel()).requestType(lostDeviceMgmt.getRequestType()).status("PENDING_VERIFICATION").build();
-                payload(set, lostDeviceDetail);
-                logger.info("lostDeviceDetail payload {}", lostDeviceDetail);
-            }
-        } catch (Exception ex) {
-            logger.error("Exception in processing the file {}", ex.getMessage());
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            logger.error("Exception in processing the file {}", exception.getMessage());
+            failCount++;
         }
+        logger.info("failCount {}", failCount);
         return failCount == 0;
     }
+
 
     public void validFile(WebActionDb webActionDb, String uploadedFilePath, LostDeviceMgmt lostDeviceMgmt, PrintWriter printWriter, String uploadedFileName, String state) {
         this.pendingVerificationFileValidation(uploadedFilePath, lostDeviceMgmt, printWriter, state);
         printWriter.close();
-        try {
-            lostDeviceDetailRepository.saveAll(lostDeviceDetailPayload);
-            logger.info("Record saved in lost_device_details for {}", lostDeviceMgmt.getRequestId());
-            BiConsumer<String, String> updateStatusInLostDeviceMgmt = moiService::updateStatusInLostDeviceMgmt;
-            updateStatusInLostDeviceMgmt.accept("VERIFY_MOI", lostDeviceMgmt.getRequestId());
-            webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
-        } catch (Exception e) {
-            logger.info("Exception occured during save operation {}", e.getMessage());
-        }
+        if (!set.isEmpty()) this.payload(set);
+        logger.info("Record saved in lost_device_details for {}", lostDeviceMgmt.getRequestId());
+        BiConsumer<String, String> updateStatusInLostDeviceMgmt = moiService::updateStatusInLostDeviceMgmt;
+        updateStatusInLostDeviceMgmt.accept("VERIFY_MOI", lostDeviceMgmt.getRequestId());
+        logger.info("updated status as VERIFY_MOI");
+        webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
+        logger.info("updated state as DONE against {}", webActionDb.getTxnId());
+
     }
 
     public void invalidFile(WebActionDb webActionDb, String uploadedFilePath, LostDeviceMgmt lostDeviceMgmt, PrintWriter printWriter, String uploadedFileName, String state) {
+        printWriter.close();
         String channel = Objects.nonNull(lostDeviceMgmt.getDeviceOwnerNationality()) ? lostDeviceMgmt.getDeviceOwnerNationality() : "EMAIL";
         BiConsumer<String, String> updateStatusInLostDeviceMgmt = moiService::updateStatusInLostDeviceMgmt;
         updateStatusInLostDeviceMgmt.accept("FAIL", lostDeviceMgmt.getRequestId());
         webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
         notificationForPendingVerification.sendNotification(webActionDb, lostDeviceMgmt, channel, uploadedFilePath);
-        printWriter.close();
+    }
+
+    public void action(String[] split, PrintWriter printWriter, String state, List<String> imeiList, LostDeviceMgmt lostDeviceMgmt) {
+        for (String imei : imeiList) {
+            if (!moiService.isNumericAndValid(imei)) {
+                logger.info("Invalid IMEI {} found", imei);
+                printWriter.println(moiService.joiner(split, ",Fail,Invalid IMEI"));
+            } else {
+                if (state.equalsIgnoreCase("0")) {
+                    if (!isConditionFulfil(imei, printWriter, split)) break;
+                } else if (state.equalsIgnoreCase("1")) {
+                    printSuccessRecord(split, printWriter);
+                    LostDeviceDetail lostDeviceDetail = LostDeviceDetail.builder().imei(imei).requestId(lostDeviceMgmt.getRequestId()).contactNumber(lostDeviceMgmt.getContactNumberForOtp()).deviceBrand(lostDeviceMgmt.getDeviceBrand()).deviceModel(lostDeviceMgmt.getDeviceModel()).requestType(lostDeviceMgmt.getRequestType()).status("PENDING_VERIFICATION").build();
+                    set.add(lostDeviceDetail);
+                }
+            }
+        }
     }
 
     public Boolean isImeiExistInLostDeviceMgmt(String value) {
@@ -173,17 +175,16 @@ public class PendingVerificationService {
         return true;
     }
 
-    public void payload(Set<String> imeiSet, LostDeviceDetail lostDeviceDetail) {
-        for (String imei : imeiSet) {
-            lostDeviceDetail.setImei(imei);
-            lostDeviceDetailPayload.add(lostDeviceDetail);
+    public void payload(Set<LostDeviceDetail> lostDeviceDetailSet) {
+        try {
+            logger.info("lostDeviceDetail payload after successful verification{}", lostDeviceDetailSet);
+            lostDeviceDetailRepository.saveAll(lostDeviceDetailSet);
+        } catch (DataIntegrityViolationException e) {
+            logger.info("IMEI {} already exist in lost_device_detail", e.getMessage());
         }
-        logger.info("lostDeviceDetail payload {}", lostDeviceDetailPayload);
     }
 
     public void printSuccessRecord(String[] split, PrintWriter printWriter) {
         printWriter.println(moiService.joiner(split, ",Success,Success"));
-        for (String arr : split)
-            set.add(arr);
     }
 }

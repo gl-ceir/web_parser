@@ -50,7 +50,6 @@ public class MOILostStolenService {
                 if (!record.trim().isEmpty()) {
                     if (!headerSkipped) {
                         header = record.split(appConfig.getListMgmtFileSeparator(), -1);
-//printWriter.println(moiService.joiner(header, ""));
                         headerSkipped = true;
                     } else {
                         split = record.split(appConfig.getListMgmtFileSeparator(), -1);
@@ -59,25 +58,11 @@ public class MOILostStolenService {
                         List<String> imeiList = moiService.imeiSeries.apply(imeiSeriesModel);
                         if (!imeiList.isEmpty()) imeiList.forEach(imei -> {
                             if (!moiService.isNumericAndValid(imei)) {
-//    printWriter.println(moiService.joiner(split, ",Invalid Format"));
                                 logger.info("Invalid IMEI found");
                             } else {
                                 this.recordProcess(imei, lostDeviceMgmt, lostDeviceMgmt.getDeviceLostDateTime(), "BULK", greyListDuration);
                             }
                         });
-
-/*        if (!imeiList.isEmpty()) imeiList.forEach(imei -> {
-if (greyListDuration == 0)
-moiService.greyListDurationIsZero(imei, "Single", lostDeviceMgmt);
-else if (greyListDuration > 0)
-moiService.greyListDurationGreaterThanZero(greyListDuration, imei, "Single", lostDeviceMgmt);
-else logger.info("pass a valid 'GREY_LIST_DURATION' tag value");
-});
-moiService.imeiPairDetail(deviceLostDateTime);
-moiService.updateStatusInLostDeviceMgmt("DONE", lostDeviceMgmt.getRequestId());
-webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
-*/
-
                     }
                 }
             }
@@ -85,9 +70,9 @@ webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
                 notificationForPendingVerification.sendNotification(webActionDb, lostDeviceMgmt, lostDeviceMgmt.getDeviceOwnerNationality(), uploadedFilePath);
                 logger.info("notification sent via {} mode to user , 0:citiizen 1:Non combodian", lostDeviceMgmt.getDeviceOwnerNationality());
             }
-//  printWriter.close();
-        } catch (Exception ex) {
-            logger.error("Exception in processing the file " + ex.getMessage());
+        } catch (Exception exception) {
+            logger.error("Exception in processing the file " + exception.getMessage());
+            exception.printStackTrace();
         }
     }
 
@@ -95,7 +80,7 @@ webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
         if (greyListDuration == 0) moiService.greyListDurationIsZero(imei, mode, lostDeviceMgmt);
         else if (greyListDuration > 0)
             moiService.greyListDurationGreaterThanZero(greyListDuration, imei, mode, lostDeviceMgmt);
-        else logger.info("pass a valid 'GREY_LIST_DURATION' tag value");
+        else logger.info("GREY_LIST_DURATION tag invalid value {}", greyListDuration);
 
         if (moiService.isDateFormatValid(deviceLostDateTime)) {
             moiService.imeiPairDetail(deviceLostDateTime, mode);

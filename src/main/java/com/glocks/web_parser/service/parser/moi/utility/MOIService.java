@@ -144,7 +144,7 @@ public class MOIService {
     }
 
     public <T> T save(T v1, Function<T, T> saveFunction) {
-        logger.info("going to save {}", v1);
+        logger.info("Going to save {}", v1);
         return saveFunction.apply(v1);
     }
 
@@ -172,7 +172,7 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
     }
 
     public DateTimeFormatter dateFormatter() {
-        return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     }
 
     public boolean isDateFormatValid(String createdOn) {
@@ -242,10 +242,11 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
             blackList.setImei(imei);
             blackList.setModeType(mode);
             blackList.setSource("MOI");
+            blackList.setRequestType("STOLEN");
+            blackList.setRemarks(lostDeviceMgmt.getRemark());
             blackList.setTxnId(lostDeviceMgmt.getRequestId());
             blackList.setTac(getTacFromIMEI(imei));
             blackList.setActualImei(getActualIMEI(imei));
-            logger.info("black_list {}", blackList);
             save(blackList, blackListRepository::save);
             BlackListHis blackListHis = new BlackListHis();
             BeanUtils.copyProperties(blackList, blackListHis);
@@ -255,14 +256,11 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
     }
 
     public void greyListDurationGreaterThanZero(int greyListDuration, String imei, String mode, LostDeviceMgmt lostDeviceMgmt) {
-
-        GreyList greyList = GreyList.builder().imei(imei).msisdn(lostDeviceMgmt.getContactNumber()).modeType(mode).source("MOI").expiryDate(expiryDate(greyListDuration)).txnId(lostDeviceMgmt.getRequestId()).tac(getTacFromIMEI(imei)).actualImei(getActualIMEI(imei)).build();
+        GreyList greyList = GreyList.builder().imei(imei).msisdn(lostDeviceMgmt.getContactNumber()).modeType(mode).source("MOI").expiryDate(expiryDate(greyListDuration)).requestType("STOLEN").remarks(lostDeviceMgmt.getRemark()).txnId(lostDeviceMgmt.getRequestId()).tac(getTacFromIMEI(imei)).actualImei(getActualIMEI(imei)).build();
         save(greyList, greyListRepository::save);
-        logger.info("greylist {}", greyList);
         GreyListHis greyListHis = new GreyListHis();
         BeanUtils.copyProperties(greyList, greyListHis);
         greyListHis.setAction("ADD");
-        logger.info("greyListHis {}", greyListHis);
         save(greyListHis, greyListHisRepository::save);
     }
 
@@ -295,8 +293,10 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
     }
 
     public void updateStatusInLostDeviceMgmt(String status, String requestId) {
-        logger.info("updated lost_device_mgmt with status {} and requestId {}", status, requestId);
-        lostDeviceMgmtRepository.updateStatus(status, requestId);
+        logger.info("updated lost_device_mgmt with status {} and requestId {} and userStatus as Blocked", status, requestId);
+        // lostDeviceMgmtRepository.updateStatus(status, requestId);
+        /*    sharad comment*/
+        lostDeviceMgmtRepository.updateUserStatus(status, "Blocked", requestId);
     }
 
     public Function<IMEISeriesModel, List<String>> imeiSeries = (imeiSeries) -> {

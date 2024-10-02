@@ -46,18 +46,9 @@ public class MOIRecoverSingleRequest implements RequestTypeHandler<LostDeviceMgm
     public void executeProcess(WebActionDb webActionDb, LostDeviceMgmt lostDeviceMgmt) {
         moiRecoverService.actionAtRecord(lostDeviceMgmt, imeiList);
         moiService.updateStatusInLostDeviceMgmt("DONE", lostDeviceMgmt.getLostId());
-        webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
- /*       try {
-            String lostId = lostDeviceMgmt.getLostId();
-            imeiList.forEach(imei -> {
-                moiRecoverService.blackListFlow(imei);
-                moiRecoverService.greyListFlow(imei);
-                moiRecoverService.lostDeviceDetailFlow(imei, lostDeviceMgmt);
-            });
-            moiService.updateStatusInLostDeviceMgmt("DONE", lostId);
-            webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
-        } catch (Exception e) {
-            logger.info("Oops something break while running recover single request", e.getMessage());
-        }*/
+        logger.info("updated status as DONE");
+        webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
+        logger.info("updated state as DONE against {}", webActionDb.getTxnId());
+
     }
 }

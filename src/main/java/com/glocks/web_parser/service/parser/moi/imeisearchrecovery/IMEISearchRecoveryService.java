@@ -46,7 +46,7 @@ public class IMEISearchRecoveryService {
         if (mode.equalsIgnoreCase("SINGLE")) {
             moiService.updateStatusAndCountFoundInLost("Success", 1, transactionId, null);
             logger.info("updated record with status as DONE and count_found_in _lost as 1 for Txn ID {}", transactionId);
-            webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
+            webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
         }
         return isCopiedRecordLostDeviceMgmtToSearchIMEIDetailByPolice;
     }
@@ -54,7 +54,7 @@ public class IMEISearchRecoveryService {
     public void isLostDeviceDetailEmpty(WebActionDb webActionDb, String transactionId) {
         logger.info("No record found for txn ID {} in lost_device_detail", transactionId);
         moiService.updateStatusAndCountFoundInLost("Success", 0, transactionId, "IMEI not found");
-        webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
+        webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
 
     }
 

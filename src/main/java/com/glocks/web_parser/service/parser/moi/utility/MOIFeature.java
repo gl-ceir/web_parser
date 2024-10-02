@@ -38,7 +38,6 @@ public class MOIFeature implements FeatureInterface {
                 consumer.accept(wb, result);
             }, () -> {
                 logger.info("No Txn ID {} found for furthure processing for subFeature {}", txnId, subFeature);
-                // searchImeiByPoliceMgmtRepository.updateStatus("DONE", txnId, null);
                 webActionDbRepository.updateWebActionStatus(5, wb.getId());
                 logger.info("Updated status as DONE in web_action_db for txn id {} in subFeature {}", txnId, subFeature);
             });

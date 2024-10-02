@@ -88,9 +88,9 @@ public class LostDeviceMgmt implements Serializable {
     @Column(name = "fir_copy_url")
     private String firCopyUrl;
 
-    @Column(name = "remark")
-    private String remark;*/
-
+*/
+   @Column(name = "remark")
+   private String remark;
     @Column(name = "status")
     private String status;
 
@@ -143,6 +143,9 @@ public class LostDeviceMgmt implements Serializable {
     private String userStatus;
 
 */
+    @Column(name = "user_status")
+    private String userStatus;
+
     @Column(name = "police_station")
     private String policeStation;
 

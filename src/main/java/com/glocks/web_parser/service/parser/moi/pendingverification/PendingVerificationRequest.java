@@ -61,8 +61,10 @@ public class PendingVerificationRequest implements RequestTypeHandler<LostDevice
     @Override
     public void executeProcess(WebActionDb webActionDb, LostDeviceMgmt lostDeviceMgmt) {
         CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            logger.info("PENDING VERIFICATION PROCESS STARTED");
             verification(webActionDb, lostDeviceMgmt);
         }).thenRun(() -> {
+            logger.info("STOLEN BULK PROCESS STARTED");
             moiLostStolenBulkRequest.executeInitProcess(webActionDb, lostDeviceMgmt);
         });
         future.join();

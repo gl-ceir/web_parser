@@ -36,13 +36,15 @@ public class MOILostStolenBulkRequest implements RequestTypeHandler<LostDeviceMg
     Map<String, String> map = new HashMap<>();
     private AlertService alertService;
     private MOILostStolenService moiLostStolenService;
+    private AppConfig appConfig;
 
-    public MOILostStolenBulkRequest(WebActionDbRepository webActionDbRepository, MOIService moiService, FileOperations fileOperations, AlertService alertService, MOILostStolenService moiLostStolenService) {
+    public MOILostStolenBulkRequest(WebActionDbRepository webActionDbRepository, MOIService moiService, FileOperations fileOperations, AlertService alertService, MOILostStolenService moiLostStolenService, AppConfig appConfig) {
         this.webActionDbRepository = webActionDbRepository;
         this.moiService = moiService;
         this.fileOperations = fileOperations;
         this.alertService = alertService;
         this.moiLostStolenService = moiLostStolenService;
+        this.appConfig = appConfig;
     }
 
     @Override
@@ -55,7 +57,7 @@ public class MOILostStolenBulkRequest implements RequestTypeHandler<LostDeviceMg
     public void executeValidateProcess(WebActionDb webActionDb, LostDeviceMgmt lostDeviceMgmt) {
         String uploadedFileName = lostDeviceMgmt.getFileName();
         String transactionId = lostDeviceMgmt.getRequestId();
-        String moiFilePath = new AppConfig().getMoiFilePath();
+        String moiFilePath = appConfig.getMoiFilePath();
         String uploadedFilePath = moiFilePath + "/" + transactionId + "/" + uploadedFileName;
         logger.info("Uploaded file path is {}", uploadedFilePath);
         if (!fileOperations.checkFileExists(uploadedFilePath)) {
@@ -84,9 +86,8 @@ public class MOILostStolenBulkRequest implements RequestTypeHandler<LostDeviceMg
         String transactionId = map.get("transactionId");
         String processedFilePath = map.get("moiFilePath") + "/" + transactionId + "/" + transactionId + ".csv";
         logger.info("Processed file path is {}", processedFilePath);
-        //  PrintWriter printWriter = moiService.file(processedFilePath);
         moiLostStolenService.fileProcess(webActionDb, lostDeviceMgmt, map.get("uploadedFileName"), map.get("uploadedFilePath"), Integer.parseInt(moiService.greyListDuration()));
         moiService.updateStatusInLostDeviceMgmt("DONE", lostDeviceMgmt.getRequestId());
-        webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
+        webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
     }
 }

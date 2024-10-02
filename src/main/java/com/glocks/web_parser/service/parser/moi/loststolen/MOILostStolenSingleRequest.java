@@ -68,17 +68,10 @@ public class MOILostStolenSingleRequest implements RequestTypeHandler<LostDevice
                     moiLostStolenService.recordProcess(imei, lostDeviceMgmt, deviceLostDateTime, "SINGLE", greyListDuration);
                 }
             });
-
-
-/*            if (!imeiList.isEmpty()) imeiList.forEach(imei -> {
-if (greyListDuration == 0) moiService.greyListDurationIsZero(imei, "Single", lostDeviceMgmt);
-else if (greyListDuration > 0)
-moiService.greyListDurationGreaterThanZero(greyListDuration, imei, "Single", lostDeviceMgmt);
-else logger.info("pass a valid 'GREY_LIST_DURATION' tag value");
-});
-moiService.imeiPairDetail(deviceLostDateTime);
-moiService.updateStatusInLostDeviceMgmt("DONE", lostDeviceMgmt.getRequestId());
-webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());*/
+            moiService.updateStatusInLostDeviceMgmt("DONE", lostDeviceMgmt.getRequestId());
+            logger.info("updated status as DONE");
+            webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
+            logger.info("updated state as DONE against {}", webActionDb.getTxnId());
         } else {
             logger.info("Invalid deviceLostDateTime value {}", deviceLostDateTime);
         }

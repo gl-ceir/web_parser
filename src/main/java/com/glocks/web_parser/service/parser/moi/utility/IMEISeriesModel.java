@@ -5,6 +5,8 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Objects;
@@ -19,11 +21,12 @@ public class IMEISeriesModel {
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     private Validation validation;
+    private final Logger logger = LogManager.getLogger(this.getClass());
 
     public IMEISeriesModel setImeiSeries(String[] record, String feature) {
         switch (feature) {
             case "STOLEN" -> {
-                for (int i = 1; i <= 4; i++) {
+                for (int i = 1; i < record.length; i++) {
                     switch (i) {
                         case 1 -> {
                             this.imei1 = recordIndexWise(record[i]);
@@ -60,7 +63,7 @@ public class IMEISeriesModel {
                 }
             }
         }
-
+        logger.info("IMEISeriesModel {}", this);
         return this;
     }
 

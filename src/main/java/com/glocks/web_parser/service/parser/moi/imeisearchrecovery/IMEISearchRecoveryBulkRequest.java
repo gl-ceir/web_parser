@@ -89,7 +89,6 @@ public class IMEISearchRecoveryBulkRequest implements RequestTypeHandler<SearchI
                     } else {
                         split = record.split(appConfig.getListMgmtFileSeparator(), -1);
                         imeiSeriesModel.setImeiSeries(split, "DEFAULT");
-                        logger.info("IMEISeriesModel {}", imeiSeriesModel);
 
                         boolean isImeiValid = Stream.of(split).allMatch(imei -> moiService.isNumericAndValid(imei));
                         if (!isImeiValid) {
@@ -140,7 +139,7 @@ logger.info("Oops!, error occur while execution {}", e.getMessage());
             printWriter.close();
             moiService.updateStatusAndCountFoundInLost("DONE", successCount, transactionId, null);
             logger.info("updated record with status as DONE and count_found_in _lost as {} for Txn ID {}", successCount, transactionId);
-            webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
+            webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
         } catch (Exception ex) {
             logger.error("Exception in processing the file " + ex.getMessage());
         }
