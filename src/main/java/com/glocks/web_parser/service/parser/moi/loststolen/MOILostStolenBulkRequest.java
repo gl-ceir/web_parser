@@ -65,6 +65,11 @@ public class MOILostStolenBulkRequest implements RequestTypeHandler<LostDeviceMg
             alertService.raiseAnAlert(transactionId, ConfigurableParameter.ALERT_LOST_STOLEN.getValue(), "MOI stolen bulk", uploadedFileName + " with transaction id " + transactionId, 0);
             return;
         }
+        if (!moiService.areHeadersValid(uploadedFilePath, "STOLEN", 9)) {
+            moiService.updateStatusAsFailInLostDeviceMgmt(webActionDb,transactionId);
+            return;
+        }
+
         boolean isGreyListDurationValueValid = false;
         try {
             Integer.parseInt(moiService.greyListDuration());

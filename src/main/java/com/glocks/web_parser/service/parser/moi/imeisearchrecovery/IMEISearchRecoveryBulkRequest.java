@@ -56,6 +56,12 @@ public class IMEISearchRecoveryBulkRequest implements RequestTypeHandler<SearchI
             alertService.raiseAnAlert(transactionId, ConfigurableParameter.ALERT_IMEI_SEARCH_RECOVERY.getValue(), "MOI Search Recovery", uploadedFileName + " with transaction id " + transactionId, 0);
             return;
         }
+        if (!moiService.areHeadersValid(uploadedFilePath, "DEFAULT", 4)) {
+            moiService.updateStatusAndCountFoundInLost("FAIL", 0, transactionId, "Header Invalid");
+            logger.info("updated record with status as FAIL and count_found_in _lost as 0 for Txn ID {}", successCount, transactionId);
+            webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
+            return;
+        }
         map.put("uploadedFileName", uploadedFileName);
         map.put("transactionId", transactionId);
         map.put("uploadedFilePath", uploadedFilePath);
@@ -103,34 +109,6 @@ public class IMEISearchRecoveryBulkRequest implements RequestTypeHandler<SearchI
                             }
                             int count = imeiSearchRecoveryService.actionAtRecord(imeiSeriesModel, webActionDb, transactionId, printWriter, "BULK", split);
                             successCount += count;
-/*                            List<String> imeiList = moiService.imeiList(imeiSeriesModel);
-boolean isLostDeviceDetailExist = false;
-if (!imeiList.isEmpty()) {
-try {
-for (String imei : imeiList) {
-Optional<LostDeviceDetail> LostDeviceDetailOptional = moiService.findByImeiAndStatusAndRequestType(imei);
-if (LostDeviceDetailOptional.isPresent()) {
-boolean isCopiedRecordLostDeviceMgmtToSearchIMEIDetailByPolice = imeiSearchRecoveryService.isRequestIdFound(imei, imeiSeriesModel.getMap().get(imei), webActionDb, transactionId, LostDeviceDetailOptional.get().getRequestId(), "BULK", 0);
-if (isCopiedRecordLostDeviceMgmtToSearchIMEIDetailByPolice) {
-printWriter.println(moiService.joiner(split, ",Found"));
-successCount++;
-isLostDeviceDetailExist = true;
-break;
-}
-}
-}
-
-if (!isLostDeviceDetailExist) {
-imeiSearchRecoveryService.isLostDeviceDetailEmpty(webActionDb, transactionId);
-printWriter.println(moiService.joiner(split, ",Not Found"));
-}
-} catch (Exception e) {
-e.printStackTrace();
-moiService.updateStatusAndCountFoundInLost("Fail", 0, transactionId, "Please try after some time");
-//      webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
-logger.info("Oops!, error occur while execution {}", e.getMessage());
-}
-}*/
                         }
                     }
                 }

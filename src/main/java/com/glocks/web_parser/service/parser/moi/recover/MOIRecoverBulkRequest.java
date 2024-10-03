@@ -45,6 +45,11 @@ public class MOIRecoverBulkRequest implements RequestTypeHandler<LostDeviceMgmt>
             alertService.raiseAnAlert(transactionId, ConfigurableParameter.ALERT_RECOVER.getValue(), "MOI Recover", uploadedFileName + " with transaction id " + transactionId, 0);
             return;
         }
+        if (!moiService.areHeadersValid(uploadedFilePath, "DEFAULT", 4)) {
+            moiService.updateStatusAsFailInLostDeviceMgmt(webActionDb, transactionId);
+            return;
+        }
+
         map.put("uploadedFileName", uploadedFileName);
         map.put("transactionId", transactionId);
         map.put("uploadedFilePath", uploadedFilePath);

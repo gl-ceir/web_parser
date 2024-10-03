@@ -50,6 +50,10 @@ public class PendingVerificationRequest implements RequestTypeHandler<LostDevice
             alertService.raiseAnAlert(transactionId, ConfigurableParameter.ALERT_PENDING_VERIFICATION.getValue(), "MOI Pending Verification", uploadedFileName + " with transaction id " + transactionId, 0);
             return;
         }
+        if (!moiService.areHeadersValid(uploadedFilePath, "STOLEN", 9)) {
+            moiService.updateStatusAsFailInLostDeviceMgmt(webActionDb,transactionId);
+            return;
+        }
         map.put("uploadedFileName", uploadedFileName);
         map.put("transactionId", transactionId);
         map.put("uploadedFilePath", uploadedFilePath);
@@ -61,10 +65,10 @@ public class PendingVerificationRequest implements RequestTypeHandler<LostDevice
     @Override
     public void executeProcess(WebActionDb webActionDb, LostDeviceMgmt lostDeviceMgmt) {
         CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-            logger.info("PENDING VERIFICATION PROCESS STARTED");
+            logger.info("----PENDING VERIFICATION PROCESS STARTED---");
             verification(webActionDb, lostDeviceMgmt);
         }).thenRun(() -> {
-            logger.info("STOLEN BULK PROCESS STARTED");
+            logger.info("----STOLEN BULK PROCESS STARTED----");
             moiLostStolenBulkRequest.executeInitProcess(webActionDb, lostDeviceMgmt);
         });
         future.join();

@@ -68,6 +68,7 @@ public class MOILostStolenSingleRequest implements RequestTypeHandler<LostDevice
                     moiLostStolenService.recordProcess(imei, lostDeviceMgmt, deviceLostDateTime, "SINGLE", greyListDuration);
                 }
             });
+//            as per sharad userstatus should be marked as blocked
             moiService.updateStatusInLostDeviceMgmt("DONE", lostDeviceMgmt.getRequestId());
             logger.info("updated status as DONE");
             webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());

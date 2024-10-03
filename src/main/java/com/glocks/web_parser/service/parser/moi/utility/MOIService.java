@@ -1,16 +1,20 @@
 package com.glocks.web_parser.service.parser.moi.utility;
 
 import com.glocks.web_parser.config.AppConfig;
+import com.glocks.web_parser.dto.ListMgmtDto;
 import com.glocks.web_parser.model.app.*;
 import com.glocks.web_parser.repository.app.*;
 import com.glocks.web_parser.validator.Validation;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.aspectj.apache.bcel.generic.RET;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -19,6 +23,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @Component
@@ -38,6 +43,8 @@ public class MOIService {
     private final ImeiPairDetailHisRepository imeiPairDetailHisRepository;
     private final Validation validation;
     private final SysParamRepository sysParamRepository;
+    private final AppConfig appConfig;
+    private final WebActionDbRepository webActionDbRepository;
 
     public Optional<SearchImeiByPoliceMgmt> findByTxnId(String txnId) {
         Optional<SearchImeiByPoliceMgmt> response = searchImeiByPoliceMgmtRepository.findByTransactionId(txnId);
@@ -294,9 +301,8 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
 
     public void updateStatusInLostDeviceMgmt(String status, String requestId) {
         logger.info("updated lost_device_mgmt with status {} and requestId {} and userStatus as Blocked", status, requestId);
-        // lostDeviceMgmtRepository.updateStatus(status, requestId);
-        /*    sharad comment*/
-        lostDeviceMgmtRepository.updateUserStatus(status, "Blocked", requestId);
+        lostDeviceMgmtRepository.updateStatus(status, requestId);
+        //  lostDeviceMgmtRepository.updateUserStatus(status, "Blocked", requestId);
     }
 
     public Function<IMEISeriesModel, List<String>> imeiSeries = (imeiSeries) -> {
@@ -364,5 +370,68 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
             return Arrays.stream(source.split(",")).filter(element -> !element.equals("MOI")).collect(Collectors.joining(","));
         } else logger.info("source value is null");
         return null;
+    }
+
+
+    public boolean areHeadersValid(String filePath, String feature, int length) {
+        boolean isHeadersNameValid = false;
+        Map<String, String> map = new HashMap<>();
+        File file = new File(filePath);
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String headers = reader.readLine();
+            String[] header = headers.split(appConfig.getListMgmtFileSeparator(), -1);
+            if (header.length != length) {
+                logger.info("Invalid header length");
+                return false;
+            }
+
+            switch (feature) {
+                case "STOLEN" -> {
+                    map.put("0", "Phone Number");
+                    map.put("1", "IMEI");
+                    map.put("2", "IMEI2");
+                    map.put("3", "IMEI3");
+                    map.put("4", "IMEI4");
+                    map.put("5", "Device Type");
+                    map.put("6", "Device Brand");
+                    map.put("7", "Device Model");
+                    map.put("8", "Serial number");
+                    isHeadersNameValid = IntStream.range(0, length)
+                            .allMatch(i -> map.get(String.valueOf(i)).equalsIgnoreCase(header[i].trim()));
+                    logger.info("isHeadersNameValid {}", isHeadersNameValid);
+                    if (!isHeadersNameValid) {
+                        logger.info("The header of the file is not correct");
+                        reader.close();
+                    }
+
+                }
+
+                case "DEFAULT" -> {
+                    map.put("0", "IMEI");
+                    map.put("1", "IMEI2");
+                    map.put("2", "IMEI3");
+                    map.put("3", "IMEI4");
+                    isHeadersNameValid = IntStream.range(0, length)
+                            .allMatch(i -> map.get(String.valueOf(i)).equalsIgnoreCase(header[i].trim()));
+                    logger.info("isHeadersNameValid {}", isHeadersNameValid);
+                    if (!isHeadersNameValid) {
+                        logger.info("The header of the file is not correct");
+                        reader.close();
+                    }
+                }
+            }
+
+        } catch (Exception ex) {
+            logger.error("Exception while reading the file {} {}", filePath, ex.getMessage());
+            return false;
+        }
+        return isHeadersNameValid;
+    }
+
+
+    public void updateStatusAsFailInLostDeviceMgmt(WebActionDb webActionDb, String transactionId) {
+        this.updateStatusInLostDeviceMgmt("FAIL", transactionId);
+        logger.info("updated record with status as FAIL for Txn ID {}", transactionId);
+        webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
     }
 }
