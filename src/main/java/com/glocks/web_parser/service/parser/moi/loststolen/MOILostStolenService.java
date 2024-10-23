@@ -42,14 +42,14 @@ public class MOILostStolenService {
     public void fileProcess(WebActionDb webActionDb, LostDeviceMgmt lostDeviceMgmt, String uploadedFileName, String uploadedFilePath, int greyListDuration) {
         try (BufferedReader reader = new BufferedReader(new FileReader(uploadedFilePath))) {
             String record;
-            String[] header;
+            //  String[] header;
             IMEISeriesModel imeiSeriesModel = new IMEISeriesModel();
             String[] split;
             boolean headerSkipped = false;
             while ((record = reader.readLine()) != null) {
                 if (!record.trim().isEmpty()) {
                     if (!headerSkipped) {
-                        header = record.split(appConfig.getListMgmtFileSeparator(), -1);
+                        // header = record.split(appConfig.getListMgmtFileSeparator(), -1);
                         headerSkipped = true;
                     } else {
                         split = record.split(appConfig.getListMgmtFileSeparator(), -1);
@@ -60,19 +60,19 @@ public class MOILostStolenService {
                             if (!moiService.isNumericAndValid(imei)) {
                                 logger.info("Invalid IMEI found");
                             } else {
-                                this.recordProcess(imei, lostDeviceMgmt, lostDeviceMgmt.getDeviceLostDateTime(), "BULK", greyListDuration);
+                                this.recordProcess(imei, lostDeviceMgmt, lostDeviceMgmt.getDeviceLostDateTime(), "Bulk", greyListDuration);
                             }
                         });
                     }
                 }
             }
             if (Objects.nonNull(lostDeviceMgmt.getDeviceOwnerNationality())) {
-                notificationForPendingVerification.sendNotification(webActionDb, lostDeviceMgmt, lostDeviceMgmt.getDeviceOwnerNationality(), uploadedFilePath);
-                logger.info("notification sent via {} mode to user , 0:citiizen 1:Non combodian", lostDeviceMgmt.getDeviceOwnerNationality());
+                String channel = lostDeviceMgmt.getDeviceOwnerNationality().equals("0") ? "SMS" : "EMAIL";
+                notificationForPendingVerification.sendNotification(webActionDb, lostDeviceMgmt, channel, uploadedFilePath);
+                logger.info("notification sent to {} mode user , 0:Cambodian 1:Non-cambodian", lostDeviceMgmt.getDeviceOwnerNationality());
             }
         } catch (Exception exception) {
             logger.error("Exception in processing the file " + exception.getMessage());
-            exception.printStackTrace();
         }
     }
 
@@ -84,6 +84,27 @@ public class MOILostStolenService {
 
         if (moiService.isDateFormatValid(deviceLostDateTime)) {
             moiService.imeiPairDetail(deviceLostDateTime, mode);
+        }
+        lostDeviceDetailAction(imei, lostDeviceMgmt, mode);
+    }
+
+    public void lostDeviceDetailAction(String imei, LostDeviceMgmt lostDeviceMgmt, String mode) {
+        if (mode.equalsIgnoreCase("SINGLE")) {
+            LostDeviceDetail lostDeviceDetail = LostDeviceDetail.builder().imei(imei).deviceModel(lostDeviceMgmt.getDeviceModel()).deviceBrand(lostDeviceMgmt.getDeviceBrand()).contactNumber(lostDeviceMgmt.getContactNumber()).requestId(lostDeviceMgmt.getRequestId()).status("Done").requestType("Stolen").build();
+            logger.info("lostDeviceDetail {}", lostDeviceDetail);
+            LostDeviceDetail save = moiService.save(lostDeviceDetail, lostDeviceDetailRepository::save);
+            if (save != null) {
+                logger.info("Record inserted for imei {} in lost_device_detail", imei);
+            } else {
+                logger.info("Failed to insert record for imei {} in lost_device_detail", imei);
+            }
+        }
+        if (mode.equalsIgnoreCase("BULK")) {
+            if (lostDeviceDetailRepository.updateStatus("Done", imei) > 0) {
+                logger.info("Record updated for imei {} in lost_device_detail", imei);
+            } else {
+                logger.info("Failed to update record for imei {} in lost_device_detail", imei);
+            }
         }
     }
 }

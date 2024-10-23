@@ -32,7 +32,7 @@ public class SearchImeiDetailByPolice implements Serializable {
     @Column(name = "modified_on")
     LocalDateTime modifiedOn;
 
-    @Column(name = "imei", nullable = false)
+    @Column(name = "imei")
     private String imei;
 
     @Column(name = "lost_date_time")

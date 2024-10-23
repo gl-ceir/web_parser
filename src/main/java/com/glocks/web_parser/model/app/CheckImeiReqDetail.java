@@ -3,13 +3,12 @@ package com.glocks.web_parser.model.app;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Data
-@Table(name="check_imei_req_detail")
+@Table(name = "check_imei_req_detail")
 public class CheckImeiReqDetail {
 
     @Id
@@ -18,26 +17,53 @@ public class CheckImeiReqDetail {
 
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name="created_on")
+    @Column(name = "created_on")
     LocalDateTime createdOn;
 
-    @Column(name="language")
+    @Column(name = "language")
     String language;
 
-    @Column(name="imei")
+    @Column(name = "imei")
     String imei;
 
-    @Column(name="compliance_status")
+    @Column(name = "compliance_status")
     String complianceStatus;
 
-    @Column(name="channel")
+    @Column(name = "channel")
     String channel;
 
-    @Column(name="request_id")
+    @Column(name = "request_id")
     String requestId;
 
-    @Column(name="fail_process_description")
+    @Column(name = "fail_process_description")
     String failProcessDescription;
+
+    @Column(name = "request_process_status")
+    String requestProcessStatus;
+
+    @Column(name = "imei_process_status")
+    String imeiProcessStatus;
+
+    @Column(name = "header_browser")
+    String headerBrowser;
+
+    @Column(name = "header_public_ip")
+    String headerPublicIp;
+
+    @Column(name = "brand_name")
+    String brandName;
+
+    @Column(name = "model_name")
+    String modelName;
+
+    @Column(name = "manufacturer")
+    String manufacturer;
+
+    @Column(name = "marketing_name")
+    String marketingName;
+
+    @Column(name = "device_type")
+    String deviceType;
 
 
 }

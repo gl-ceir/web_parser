@@ -46,7 +46,7 @@ public class NotificationForPendingVerification {
                 smsNotificationDto.setEmail(email);
                 smsNotificationDto.setChannelType("SMS");
                 smsNotificationDto.setMsisdn(lostDeviceMgmt.getContactNumber());
-                eirsResponseParam = utilFunctions.replaceParameter(eirsResponseParamRepository.getByTagAndLanguage(ConfigurableParameter.STOLEN_TAG_NOTIFICATION.getValue(), language), requestId, lostDeviceMgmt.getContactNumber(), channel);
+                eirsResponseParam = utilFunctions.replaceParameter(eirsResponseParamRepository.getByTagAndLanguage(ConfigurableParameter.MOI_PENDING_VERIFICATION_MSG.getValue(), language), requestId, lostDeviceMgmt.getContactNumberForOtp(), channel);
                 smsNotificationDto.setMessage(eirsResponseParam.getValue());
                 logger.info("SMS notification sent {}", smsNotificationDto);
                 smsService.callSmsNotificationApi(smsNotificationDto);
@@ -57,7 +57,7 @@ public class NotificationForPendingVerification {
                 emailDto.setTxn_id(requestId);
                 emailDto.setLanguage(language);
                 emailDto.setFile(uploadedFilePath);
-                eirsResponseParam = utilFunctions.replaceParameter(eirsResponseParamRepository.getByTagAndLanguage(ConfigurableParameter.STOLEN_TAG_NOTIFICATION.getValue(), language), lostDeviceMgmt.getRequestId(), null, channel);
+                eirsResponseParam = utilFunctions.replaceParameter(eirsResponseParamRepository.getByTagAndLanguage(ConfigurableParameter.MOI_PENDING_VERIFICATION_MSG.getValue(), language), lostDeviceMgmt.getRequestId(), null, channel);
                 emailDto.setSubject(eirsResponseParam.getDescription());
                 emailDto.setMessage(eirsResponseParam.getValue());
                 logger.info("EMAIL notification sent {}", emailDto);

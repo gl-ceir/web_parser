@@ -26,8 +26,6 @@ public class MOILostStolenSubFeature {
 
     public RequestTypeHandler checkType(LostDeviceMgmt lostDeviceMgmt) {
         String requestType = lostDeviceMgmt.getRequestMode();
-        RequestTypeHandler requestTypeSelection = requestType.equalsIgnoreCase(ConfigurableParameter.SINGLE.getValue()) ? moiLostStolenSingleRequest : requestType.equalsIgnoreCase(ConfigurableParameter.BULK.getValue()) ? moiLostStolenBulkRequest : null;
-        //RequestTypeHandler requestTypeSelection = requestType.equalsIgnoreCase(ConfigurableParameter.SINGLE.getValue()) ? moiLostStolenSingleRequest : null;
-        return requestTypeSelection;
+        return requestType.equalsIgnoreCase(ConfigurableParameter.SINGLE.getValue()) ? moiLostStolenSingleRequest : requestType.equalsIgnoreCase(ConfigurableParameter.BULK.getValue()) ? moiLostStolenBulkRequest : null;
     }
 }

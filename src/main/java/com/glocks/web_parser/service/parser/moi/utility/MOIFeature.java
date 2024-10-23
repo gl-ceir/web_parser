@@ -32,13 +32,14 @@ public class MOIFeature implements FeatureInterface {
                 case "IMEI_SEARCH_RECOVERY" -> optional = moiService.findByTxnId(txnId);
                 case "STOLEN", "LOST", "LOST/STOLEN", "PENDING_VERIFICATION" ->
                         optional = moiService.findByRequestId(txnId);
-                case "RECOVER" -> optional = moiService.findByLostId(txnId);
+                // case "RECOVER" -> optional = moiService.findByLostId(txnId);
+                case "RECOVER" -> optional = moiService.findByRequestId(txnId);
             }
             optional.ifPresentOrElse(result -> {
                 consumer.accept(wb, result);
             }, () -> {
                 logger.info("No Txn ID {} found for furthure processing for subFeature {}", txnId, subFeature);
-                webActionDbRepository.updateWebActionStatus(5, wb.getId());
+                webActionDbRepository.updateWebActionStatus(4, wb.getId());
                 logger.info("Updated status as DONE in web_action_db for txn id {} in subFeature {}", txnId, subFeature);
             });
         }
@@ -46,9 +47,11 @@ public class MOIFeature implements FeatureInterface {
 
     @Override
     public void executeInit(WebActionDb wb) {
-        String subFeatureName = wb.getSubFeature().trim();
-        logger.info("Initialization started for MOI sub feaure : {}", subFeatureName);
-        this.action(wb, subFeatureName);
+        if (Objects.nonNull(wb.getSubFeature().trim())) {
+            String subFeatureName = wb.getSubFeature().trim().toUpperCase();
+            logger.info("Initialization started for MOI sub feature : {}", subFeatureName);
+            this.action(wb, subFeatureName);
+        }
     }
 
     @Override

@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode
 public class LostDeviceDetail implements Serializable {
     private static final long serialVersionUID = -9193873433253773828L;
     @Id

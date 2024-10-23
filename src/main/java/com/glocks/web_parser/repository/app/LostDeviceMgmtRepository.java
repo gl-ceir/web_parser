@@ -15,9 +15,9 @@ import java.util.Optional;
 @Repository
 @Transactional(rollbackOn = {SQLException.class})
 public interface LostDeviceMgmtRepository extends JpaRepository<LostDeviceMgmt, Long> {
-    Optional<LostDeviceMgmt> findByRequestId(String lostID);
+    Optional<LostDeviceMgmt> findByRequestId(String requestId);
 
-    Optional<LostDeviceMgmt> findByLostId(String lostID);
+    Optional<LostDeviceMgmt> findByLostId(String lostId);
 
     @Modifying
     @Query("UPDATE LostDeviceMgmt x SET x.status =:status WHERE x.requestId =:requestId")

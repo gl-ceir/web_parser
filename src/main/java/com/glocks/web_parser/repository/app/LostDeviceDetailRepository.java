@@ -22,7 +22,7 @@ public interface LostDeviceDetailRepository extends JpaRepository<LostDeviceDeta
 
     Optional<LostDeviceDetail> findByImeiAndStatusIgnoreCaseAndRequestTypeIgnoreCaseIn(String imei, String status, List<String> requestType);
 
-    int deleteByImeiAndStatusIn(String imei, List<String> status);
+    int deleteByImeiAndRequestTypeIgnoreCaseIn(String imei, List<String> status);
 
     Boolean existsByImei(String imei);
 

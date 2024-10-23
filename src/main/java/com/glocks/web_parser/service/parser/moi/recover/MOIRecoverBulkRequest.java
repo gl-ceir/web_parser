@@ -37,15 +37,15 @@ public class MOIRecoverBulkRequest implements RequestTypeHandler<LostDeviceMgmt>
     @Override
     public void executeValidateProcess(WebActionDb webActionDb, LostDeviceMgmt lostDeviceMgmt) {
         String uploadedFileName = lostDeviceMgmt.getFileName();
-        String transactionId = lostDeviceMgmt.getLostId();
+        String transactionId = webActionDb.getTxnId();
         String uploadedFilePath = appConfig.getMoiFilePath() + "/" + transactionId + "/" + uploadedFileName;
         logger.info("Uploaded file path is {}", uploadedFilePath);
         if (!fileOperations.checkFileExists(uploadedFilePath)) {
             logger.error("Uploaded file does not exists in path {} for lost ID {}", uploadedFilePath, transactionId);
-            alertService.raiseAnAlert(transactionId, ConfigurableParameter.ALERT_RECOVER.getValue(), "MOI Recover", uploadedFileName + " with transaction id " + transactionId, 0);
+            alertService.raiseAnAlert(transactionId, ConfigurableParameter.ALERT_RECOVER.getValue(), webActionDb.getSubFeature(), transactionId, 0);
             return;
         }
-        if (!moiService.areHeadersValid(uploadedFilePath, "DEFAULT", 4)) {
+        if (!moiService.areHeadersValid(uploadedFilePath, "RECOVER", 1)) {
             moiService.updateStatusAsFailInLostDeviceMgmt(webActionDb, transactionId);
             return;
         }
@@ -60,10 +60,10 @@ public class MOIRecoverBulkRequest implements RequestTypeHandler<LostDeviceMgmt>
     @Override
     public void executeProcess(WebActionDb webActionDb, LostDeviceMgmt lostDeviceMgmt) {
         moiRecoverService.fileProcessing(map.get("uploadedFilePath"), lostDeviceMgmt);
-        moiService.updateStatusInLostDeviceMgmt("DONE", lostDeviceMgmt.getLostId());
-        logger.info("updated status as DONE");
+        moiService.updateStatusInLostDeviceMgmt("Done", lostDeviceMgmt.getLostId());
+        logger.info("updated status as Done");
         webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
-        logger.info("updated state as DONE against {}", webActionDb.getTxnId());
+        logger.info("updated state as Done against {}", webActionDb.getTxnId());
     }
 
 }

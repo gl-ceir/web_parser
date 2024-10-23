@@ -1,14 +1,12 @@
 package com.glocks.web_parser.service.parser.moi.utility;
 
 import com.glocks.web_parser.config.AppConfig;
-import com.glocks.web_parser.dto.ListMgmtDto;
 import com.glocks.web_parser.model.app.*;
 import com.glocks.web_parser.repository.app.*;
 import com.glocks.web_parser.validator.Validation;
 import lombok.RequiredArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.aspectj.apache.bcel.generic.RET;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
@@ -45,6 +43,7 @@ public class MOIService {
     private final SysParamRepository sysParamRepository;
     private final AppConfig appConfig;
     private final WebActionDbRepository webActionDbRepository;
+    public static Map<String, String> requestIdMap = new HashMap<>();
 
     public Optional<SearchImeiByPoliceMgmt> findByTxnId(String txnId) {
         Optional<SearchImeiByPoliceMgmt> response = searchImeiByPoliceMgmtRepository.findByTransactionId(txnId);
@@ -54,9 +53,9 @@ public class MOIService {
 
     public boolean isBrandAndModelValid(List<String> list) {
         Map<String, String> map = new HashMap<>();
-        for (String imei : list) {
-            mdrRepository.findByDeviceId(imei).ifPresent(x -> {
-                map.put(imei, x.stream().map(y -> y.getBrandName() + "<>" + y.getModelName()).collect(Collectors.joining()));
+        for (String tac : list) {
+            mdrRepository.findByDeviceId(tac).ifPresent(x -> {
+                map.put(tac, x.stream().map(y -> y.getBrandName() + "<>" + y.getModelName()).collect(Collectors.joining()));
             });
         }
         logger.info(" MDR record {}", map);
@@ -68,22 +67,39 @@ public class MOIService {
 
     public Optional<String> imeiListOfLostDevice(List<String> imeiList) {
         return imeiList.stream().filter(x -> {
-            Boolean isExist = lostDeviceDetailRepository.existsByImeiAndStatusIgnoreCaseAndRequestTypeIgnoreCaseIn(x, "DONE", List.of("LOST", "STOLEN"));
+            Boolean isExist = lostDeviceDetailRepository.existsByImeiAndStatusIgnoreCaseAndRequestTypeIgnoreCaseIn(x, "Done", List.of("LOST", "STOLEN"));
             logger.info("is {} exist in lost_device_detail {}", x, isExist);
             return isExist;
         }).findFirst();
     }
 
-    public Optional<LostDeviceDetail> findByImeiAndStatusAndRequestType(String imei) {
-        Optional<LostDeviceDetail> result = lostDeviceDetailRepository.findByImeiAndStatusIgnoreCaseAndRequestTypeIgnoreCaseIn(imei, "DONE", List.of("LOST", "STOLEN"));
+    public Optional<LostDeviceDetail> findByImeiAndStatusIgnoreCaseAndRequestTypeIgnoreCaseIn(String imei) {
+        Optional<LostDeviceDetail> result = lostDeviceDetailRepository.findByImeiAndStatusIgnoreCaseAndRequestTypeIgnoreCaseIn(imei, "Done", List.of("LOST", "STOLEN"));
+        logger.info("findByImeiAndStatusIgnoreCaseAndRequestTypeIgnoreCaseIn response {}", result);
         return result;
     }
 
 
     public void updateStatusAndCountFoundInLost(String status, int count, String transactionId, String failReason) {
-        logger.info("updated SearchImeiByPoliceMgmt with status {} and txnId {} and count {}", status, transactionId, count);
+        logger.info("updated SearchImeiByPoliceMgmt with status {} and txnId {} and count {} and failReason {}", status, transactionId, count, failReason);
         searchImeiByPoliceMgmtRepository.updateCountFoundInLost(status, count, transactionId, failReason);
     }
+
+    public void updateReasonAndCountInSearchImeiByPoliceMgmt(String status, String failReason, String transactionId, int count) {
+        logger.info("updated SearchImeiByPoliceMgmt with status {} and txnId {} and failReason {}", status, transactionId, failReason);
+        searchImeiByPoliceMgmtRepository.updateStatus(status, failReason, transactionId, count);
+    }
+
+    public void updateCountFoundInLost(String status, int count, String transactionId, String failReason) {
+        logger.info("updated SearchImeiByPoliceMgmt with status {} and txnId {} and count {}", status, transactionId, count);
+        searchImeiByPoliceMgmtRepository.updateCountFoundInLost(status, count, transactionId, null);
+    }
+
+/*
+    public void updateCountFoundInLost(int count, String transactionId) {
+        logger.info("updated SearchImeiByPoliceMgmt with count {} and txnId {}", count, transactionId);
+        searchImeiByPoliceMgmtRepository.updateFailCount(count, transactionId);
+    }*/
 
     public Optional<String> findByImei(String imei) {
         Optional<String> byImei = lostDeviceDetailRepository.findLostDeviceDetailByImei(imei);
@@ -93,29 +109,49 @@ public class MOIService {
         return byImei;
     }
 
-    public boolean copyLostDeviceMgmtToSearchIMEIDetailByPolice(String requestId) {
+    public IMEISeriesModel getIMEI(LostDeviceMgmt lostDeviceMgmt) {
+        String imei1 = lostDeviceMgmt.getImei1();
+        String imei2 = lostDeviceMgmt.getImei2();
+        String imei3 = lostDeviceMgmt.getImei3();
+        String imei4 = lostDeviceMgmt.getImei4();
+        IMEISeriesModel imeiSeriesModel = new IMEISeriesModel();
+        imeiSeriesModel.setImei1(imei1);
+        imeiSeriesModel.setImei2(imei2);
+        imeiSeriesModel.setImei3(imei3);
+        imeiSeriesModel.setImei4(imei4);
+        return imeiSeriesModel;
+    }
+
+/*    public boolean copyLostDeviceMgmtToSearchIMEIDetailByPolice(String requestId, String transactionId, String mode) {
         Optional<LostDeviceMgmt> byRequestId = lostDeviceMgmtRepository.findByRequestId(requestId);
+        logger.info("LostDeviceMgmt response {}", byRequestId);
         if (byRequestId.isPresent()) {
             LostDeviceMgmt lostDeviceMgmt = byRequestId.get();
             String deviceLostDateTime = lostDeviceMgmt.getDeviceLostDateTime();
-            String imei1 = lostDeviceMgmt.getImei1();
-            String imei2 = lostDeviceMgmt.getImei2();
-            String imei3 = lostDeviceMgmt.getImei3();
-            String imei4 = lostDeviceMgmt.getImei4();
-            String imei = Objects.nonNull(imei1) ? imei1 : (Objects.nonNull(imei2) ? imei2 : (Objects.nonNull(imei3)) ? imei3 : imei4);
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
             LocalDateTime lostDateTime = LocalDateTime.parse(deviceLostDateTime, formatter);
-            SearchImeiDetailByPolice searchImeiDetailByPolice = SearchImeiDetailByPolice.builder().imei(imei).lostDateTime(lostDateTime).createdBy(lostDeviceMgmt.getCreatedBy()).transactionId(lostDeviceMgmt.getLostId()).requestId(lostDeviceMgmt.getRequestId()).deviceOwnerName(lostDeviceMgmt.getDeviceOwnerName()).deviceOwnerAddress(lostDeviceMgmt.getDeviceOwnerAddress()).contactNumber(lostDeviceMgmt.getContactNumber()).deviceOwnerNationalId(lostDeviceMgmt.getDeviceOwnerNationalID()).deviceLostPoliceStation(lostDeviceMgmt.getPoliceStation()).requestMode(lostDeviceMgmt.getRequestMode()).build();
-            SearchImeiDetailByPolice save = searchImeiDetailByPoliceRepository.save(searchImeiDetailByPolice);
-            return save != null;
+            if (requestIdMap.get(requestId) == null) {
+                requestIdMap.put(requestId, lostDeviceMgmt.getRequestId());
+                IMEISeriesModel imeiSeriesModel = getIMEI(lostDeviceMgmt);
+                List<SearchImeiDetailByPolice> searchImeiDetailByPoliceList = new ArrayList<>();
+                List<String> imeiList = this.imeiSeries.apply(imeiSeriesModel);
+                if (!imeiList.isEmpty()) imeiList.forEach(imei -> {
+                    SearchImeiDetailByPolice searchImeiDetailByPolice = SearchImeiDetailByPolice.builder().imei(imei).lostDateTime(lostDateTime).createdBy(lostDeviceMgmt.getCreatedBy()).transactionId(requestId).requestId(lostDeviceMgmt.getRequestId()).deviceOwnerName(lostDeviceMgmt.getDeviceOwnerName()).deviceOwnerAddress(lostDeviceMgmt.getDeviceOwnerAddress()).contactNumber(lostDeviceMgmt.getContactNumber()).deviceOwnerNationalId(lostDeviceMgmt.getDeviceOwnerNationalID()).deviceLostPoliceStation(lostDeviceMgmt.getPoliceStation()).requestMode(lostDeviceMgmt.getRequestMode()).build();
+                    searchImeiDetailByPoliceList.add(searchImeiDetailByPolice);
+                });
+                try {
+                    logger.info("SearchImeiDetailByPolice payload for mode {} {}", mode, searchImeiDetailByPoliceList);
+                    List<SearchImeiDetailByPolice> searchImeiDetailByPolices = searchImeiDetailByPoliceRepository.saveAll(searchImeiDetailByPoliceList);
+                    logger.info("Record saved in search_imei_detail_by_police");
+                    return searchImeiDetailByPolices.isEmpty();
+                } catch (Exception exception) {
+                    logger.info("exception occured {}", exception.getMessage());
+                    return false;
+                }
+            }
         }
         return false;
-    }
-
-    public boolean copyRecordLostDeviceMgmtToSearchIMEIDetailByPolice(String requestID) {
-        return this.copyLostDeviceMgmtToSearchIMEIDetailByPolice(requestID);
-    }
-
+    }*/
 
     public boolean isMultipleIMEIExist(IMEISeriesModel imeiSeriesModel) {
         long count = Stream.of(imeiSeriesModel).flatMap(x -> Stream.of(x.getImei2(), x.getImei3(), x.getImei4())).filter(Objects::isNull).count();
@@ -141,6 +177,7 @@ public class MOIService {
     }
 
     public boolean isNumericAndValid(String record) {
+        logger.info("going to check IMEI {} length", record);
         if (validation.isNumeric(record)) {
             if (!isIMEILengthAllowed(record)) {
                 logger.info("Invalid IMEI {} length", record);
@@ -199,7 +236,7 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
             imeiPairDetailList.forEach(list -> {
                 ImeiPairDetailHis imeiPairDetailHis = new ImeiPairDetailHis();
                 BeanUtils.copyProperties(list, imeiPairDetailHis);
-                imeiPairDetailHis.setAction("DELETE");
+                imeiPairDetailHis.setAction("Delete");
                 imeiPairDetailHis.setActionRemark("MOI");
                 logger.info("ImeiPairDetailHis {}", imeiPairDetailHis);
                 ImeiPairDetailHis savedEntity = save(imeiPairDetailHis, imeiPairDetailHisRepository::save);
@@ -207,7 +244,7 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
                     imeiPairDetailRepository.deleteById(Math.toIntExact(list.getId()));
                 }
 
-                if (mode.equalsIgnoreCase("SINGLE")) {
+/*                if (mode.equalsIgnoreCase("SINGLE")) {
                     LostDeviceDetail lostDeviceDetail = LostDeviceDetail.builder().imei(list.getImei()).contactNumber(list.getMsisdn()).requestId(list.getTxnId()).status("DONE").requestType("LOST/STOLEN").build();
                     logger.info("lostDeviceDetail {}", lostDeviceDetail);
                     LostDeviceDetail save = save(lostDeviceDetail, lostDeviceDetailRepository::save);
@@ -218,12 +255,12 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
                     }
                 }
                 if (mode.equalsIgnoreCase("BULK")) {
-                    if (lostDeviceDetailRepository.updateStatus("DONE", list.getImei()) > 0) {
+                    if (lostDeviceDetailRepository.updateStatus("Done", list.getImei()) > 0) {
                         logger.info("Record updated for imei {} in lost_device_detail", list.getImei());
                     } else {
                         logger.info("Failed to update record for imei {} in lost_device_detail", list.getImei());
                     }
-                }
+                }*/
             });
         }, () -> logger.info("No result found for created_on {}", createdOn));
     }
@@ -249,7 +286,7 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
             blackList.setImei(imei);
             blackList.setModeType(mode);
             blackList.setSource("MOI");
-            blackList.setRequestType("STOLEN");
+            blackList.setRequestType("Stolen");
             blackList.setRemarks(lostDeviceMgmt.getRemark());
             blackList.setTxnId(lostDeviceMgmt.getRequestId());
             blackList.setTac(getTacFromIMEI(imei));
@@ -257,17 +294,17 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
             save(blackList, blackListRepository::save);
             BlackListHis blackListHis = new BlackListHis();
             BeanUtils.copyProperties(blackList, blackListHis);
-            blackListHis.setAction("ADD");
+            blackListHis.setAction("Add");
             save(blackListHis, blackListHisRepository::save);
         });
     }
 
     public void greyListDurationGreaterThanZero(int greyListDuration, String imei, String mode, LostDeviceMgmt lostDeviceMgmt) {
-        GreyList greyList = GreyList.builder().imei(imei).msisdn(lostDeviceMgmt.getContactNumber()).modeType(mode).source("MOI").expiryDate(expiryDate(greyListDuration)).requestType("STOLEN").remarks(lostDeviceMgmt.getRemark()).txnId(lostDeviceMgmt.getRequestId()).tac(getTacFromIMEI(imei)).actualImei(getActualIMEI(imei)).build();
+        GreyList greyList = GreyList.builder().imei(imei).msisdn(lostDeviceMgmt.getContactNumber()).modeType(mode).source("MOI").expiryDate(expiryDate(greyListDuration)).requestType("Stolen").remarks(lostDeviceMgmt.getRemark()).txnId(lostDeviceMgmt.getRequestId()).tac(getTacFromIMEI(imei)).actualImei(getActualIMEI(imei)).build();
         save(greyList, greyListRepository::save);
         GreyListHis greyListHis = new GreyListHis();
         BeanUtils.copyProperties(greyList, greyListHis);
-        greyListHis.setAction("ADD");
+        greyListHis.setAction("Add");
         save(greyListHis, greyListHisRepository::save);
     }
 
@@ -277,11 +314,11 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
         return response;
     }
 
-    public Optional<LostDeviceMgmt> findByLostId(String id) {
+  /*  public Optional<LostDeviceMgmt> findByLostId(String id) {
         Optional<LostDeviceMgmt> response = lostDeviceMgmtRepository.findByLostId(id);
         logger.info("LostDeviceMgmt response for recovery: {} based on txn ID :{}", response, id);
         return response;
-    }
+    }*/
 
     public Optional<BlackList> findBlackListByImei(String imei) {
         Optional<BlackList> result = Optional.ofNullable(blackListRepository.findBlackListByImei(imei));
@@ -300,15 +337,13 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
     }
 
     public void updateStatusInLostDeviceMgmt(String status, String requestId) {
-        logger.info("updated lost_device_mgmt with status {} and requestId {} and userStatus as Blocked", status, requestId);
+        logger.info("updated lost_device_mgmt with status {} and requestId {}", status, requestId);
         lostDeviceMgmtRepository.updateStatus(status, requestId);
-        //  lostDeviceMgmtRepository.updateUserStatus(status, "Blocked", requestId);
     }
 
     public Function<IMEISeriesModel, List<String>> imeiSeries = (imeiSeries) -> {
         List<String> collect = Stream.of(imeiSeries).flatMap(x -> Stream.of(x.getImei1(), x.getImei2(), x.getImei3(), x.getImei4())).filter(imei -> imei != null && !imei.isEmpty()).collect(Collectors.toList());
-        if (collect == null) logger.info("No IMEI present");
-        else logger.info("Non-null IMEI list {}", collect);
+        logger.info("Non-null IMEI list {}", collect);
         return collect;
     };
 
@@ -319,8 +354,9 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
 
     public Predicate<String> isNumericAndValid = record -> {
         if (new Validation().isNumeric(record)) {
-            return isIMEILengthAllowed.test(record) ? true : false;
+            return isIMEILengthAllowed.test(record);
         }
+        logger.info("Invalid IMEI length {}", record);
         return false;
     };
 
@@ -381,14 +417,14 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
             String headers = reader.readLine();
             String[] header = headers.split(appConfig.getListMgmtFileSeparator(), -1);
             if (header.length != length) {
-                logger.info("Invalid header length");
+                logger.info("Invalid header size");
                 return false;
             }
 
             switch (feature) {
                 case "STOLEN" -> {
                     map.put("0", "Phone Number");
-                    map.put("1", "IMEI");
+                    map.put("1", "IMEI1");
                     map.put("2", "IMEI2");
                     map.put("3", "IMEI3");
                     map.put("4", "IMEI4");
@@ -396,8 +432,7 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
                     map.put("6", "Device Brand");
                     map.put("7", "Device Model");
                     map.put("8", "Serial number");
-                    isHeadersNameValid = IntStream.range(0, length)
-                            .allMatch(i -> map.get(String.valueOf(i)).equalsIgnoreCase(header[i].trim()));
+                    isHeadersNameValid = IntStream.range(0, length).allMatch(i -> map.get(String.valueOf(i)).equalsIgnoreCase(header[i].trim()));
                     logger.info("isHeadersNameValid {}", isHeadersNameValid);
                     if (!isHeadersNameValid) {
                         logger.info("The header of the file is not correct");
@@ -405,14 +440,22 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
                     }
 
                 }
+                case "RECOVER" -> {
+                    map.put("0", "IMEI");
+                    isHeadersNameValid = IntStream.range(0, length).allMatch(i -> map.get(String.valueOf(i)).equalsIgnoreCase(header[i].trim()));
+                    logger.info("isHeadersNameValid {}", isHeadersNameValid);
+                    if (!isHeadersNameValid) {
+                        logger.info("The header of the file is not correct");
+                        reader.close();
+                    }
+                }
 
                 case "DEFAULT" -> {
-                    map.put("0", "IMEI");
+                    map.put("0", "IMEI1");
                     map.put("1", "IMEI2");
                     map.put("2", "IMEI3");
                     map.put("3", "IMEI4");
-                    isHeadersNameValid = IntStream.range(0, length)
-                            .allMatch(i -> map.get(String.valueOf(i)).equalsIgnoreCase(header[i].trim()));
+                    isHeadersNameValid = IntStream.range(0, length).allMatch(i -> map.get(String.valueOf(i)).equalsIgnoreCase(header[i].trim()));
                     logger.info("isHeadersNameValid {}", isHeadersNameValid);
                     if (!isHeadersNameValid) {
                         logger.info("The header of the file is not correct");
@@ -430,8 +473,8 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
 
 
     public void updateStatusAsFailInLostDeviceMgmt(WebActionDb webActionDb, String transactionId) {
-        this.updateStatusInLostDeviceMgmt("FAIL", transactionId);
-        logger.info("updated record with status as FAIL for Txn ID {}", transactionId);
+        this.updateStatusInLostDeviceMgmt("Fail", transactionId);
+        logger.info("updated record with status as Fail for Txn ID {}", transactionId);
         webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
     }
 }

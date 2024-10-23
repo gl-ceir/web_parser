@@ -18,7 +18,9 @@ public class MOIRecoverSubFeature {
     private final MOIRecoverBulkRequest moiRecoverBulkRequest;
 
     public void delegateInitRequest(WebActionDb webActionDb, LostDeviceMgmt lostDeviceMgmt) {
-        logger.info("LostDeviceMgmt response based on lost ID {} : {}", lostDeviceMgmt.getLostId(), lostDeviceMgmt);
+        logger.info("LostDeviceMgmt response based on request ID {} : {}", lostDeviceMgmt.getRequestId(), lostDeviceMgmt);
+
+        // logger.info("LostDeviceMgmt response based on request ID {} : {}", lostDeviceMgmt.getLostId(), lostDeviceMgmt);
         RequestTypeHandler requestTypeHandler = checkType(lostDeviceMgmt);
         if (requestTypeHandler != null)
             requestTypeHandler.executeInitProcess(webActionDb, lostDeviceMgmt);

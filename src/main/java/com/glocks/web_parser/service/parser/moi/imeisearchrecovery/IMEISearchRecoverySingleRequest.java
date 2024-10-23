@@ -36,37 +36,19 @@ public class IMEISearchRecoverySingleRequest implements RequestTypeHandler<Searc
         String transactionId = searchImeiByPoliceMgmt.getTransactionId();
         boolean multipleIMEIExist = moiService.isMultipleIMEIExist(imeiSeriesModel);
         if (multipleIMEIExist) {
-            if (!imeiSearchRecoveryService.isBrandAndModelGenuine(webActionDb, imeiSeriesModel, transactionId)) return;
+            if (!imeiSearchRecoveryService.isBrandAndModelGenuine(webActionDb, imeiSeriesModel, transactionId)) {
+                moiService.updateReasonAndCountInSearchImeiByPoliceMgmt("Fail", "IMEI not belongs to same device brand and model", transactionId, 0);
+                webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
+                return;
+            }
         }
         executeProcess(webActionDb, searchImeiByPoliceMgmt);
     }
 
     @Override
     public void executeProcess(WebActionDb webActionDb, SearchImeiByPoliceMgmt searchImeiByPoliceMgmt) {
-        imeiSearchRecoveryService.actionAtRecord(imeiSeriesModel, webActionDb, searchImeiByPoliceMgmt.getTransactionId(), null, "SINGLE", null);
-/*        boolean isLostDeviceDetailExist = false;
-List<String> imeiList = moiService.imeiList(imeiSeriesModel);
-if (!imeiList.isEmpty()) {
-try {
-for (String imei : imeiList) {
-Optional<LostDeviceDetail> LostDeviceDetailOptional = moiService.findByImeiAndStatusAndRequestType(imei);
-if (LostDeviceDetailOptional.isPresent()) {
-boolean isCopiedRecordLostDeviceMgmtToSearchIMEIDetailByPolice = imeiSearchRecoveryService.isRequestIdFound(imei, imeiSeriesModel.getMap().get(imei), webActionDb, transactionId, LostDeviceDetailOptional.get().getRequestId(), "SINGLE", 1);
-if (isCopiedRecordLostDeviceMgmtToSearchIMEIDetailByPolice) {
-isLostDeviceDetailExist = true;
-break;
-}
-}
-}
-
-if (!isLostDeviceDetailExist) {
-imeiSearchRecoveryService.isLostDeviceDetailEmpty(webActionDb, transactionId);
-}
-} catch (Exception e) {
-moiService.updateStatusAndCountFoundInLost("Fail", 0, transactionId, "Please try after some time");
-webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
-logger.info("Oops!, error occur while execution {}", e.getMessage());
-}
-}*/
+        String txnId = webActionDb.getTxnId();
+        imeiSearchRecoveryService.actionAtRecord(imeiSeriesModel, webActionDb, txnId, null, "Single", null);
+        webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
     }
 }

@@ -65,14 +65,14 @@ public class MOILostStolenSingleRequest implements RequestTypeHandler<LostDevice
                 if (!moiService.isNumericAndValid(imei)) {
                     logger.info("Invalid IMEI {} found", imei);
                 } else {
-                    moiLostStolenService.recordProcess(imei, lostDeviceMgmt, deviceLostDateTime, "SINGLE", greyListDuration);
+                    moiLostStolenService.recordProcess(imei, lostDeviceMgmt, deviceLostDateTime, "Single", greyListDuration);
                 }
             });
 //            as per sharad userstatus should be marked as blocked
-            moiService.updateStatusInLostDeviceMgmt("DONE", lostDeviceMgmt.getRequestId());
-            logger.info("updated status as DONE");
+            moiService.updateStatusInLostDeviceMgmt("Done", lostDeviceMgmt.getRequestId());
+            logger.info("updated status as Done");
             webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
-            logger.info("updated state as DONE against {}", webActionDb.getTxnId());
+            logger.info("updated state as Done against {}", webActionDb.getTxnId());
         } else {
             logger.info("Invalid deviceLostDateTime value {}", deviceLostDateTime);
         }

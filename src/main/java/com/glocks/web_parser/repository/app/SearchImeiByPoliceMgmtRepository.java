@@ -22,7 +22,11 @@ public interface SearchImeiByPoliceMgmtRepository extends JpaRepository<SearchIm
     Optional<SearchImeiByPoliceMgmt> findByTransactionId(String txnId);
 
     @Modifying
-    @Query("UPDATE SearchImeiByPoliceMgmt x SET x.status =:status, x.failReason =:failReason WHERE x.transactionId =:transactionId")
-    public int updateStatus(String status, String transactionId, String failReason);
+    @Query("UPDATE SearchImeiByPoliceMgmt x SET x.status =:status, x.failReason =:failReason, x.countFoundInLost =:count WHERE x.transactionId =:transactionId")
+    public int updateStatus(String status, String transactionId, String failReason,int count);
+
+    @Modifying
+    @Query("UPDATE SearchImeiByPoliceMgmt x  SET x.countFoundInLost =:count WHERE x.transactionId =:transactionId")
+    public int updateFailCount(int count, String transactionId);
 
 }

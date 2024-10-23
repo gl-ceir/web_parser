@@ -55,12 +55,14 @@ public class UtilFunctions {
 
     //    MOI feature
     public EirsResponseParam replaceParameter(EirsResponseParam message, String requestId, String contactNumber, String channel) {
-        if (channel.equalsIgnoreCase("EMAIL"))
+        if (channel.equalsIgnoreCase("EMAIL") && Objects.nonNull(requestId))
             message.setDescription(message.getDescription().replace("<requestId>", requestId));
+        else if (channel.equalsIgnoreCase("SMS")) {
+            if (Objects.nonNull(requestId))
+                message.setValue(message.getValue().replace("<requestId>", requestId));
+            if (Objects.nonNull(contactNumber))
+                message.setValue(message.getValue().replace("<contactNumber>", contactNumber));
 
-        if (channel.equalsIgnoreCase("SMS")) {
-            message.setValue(message.getValue().replace("<requestId>", requestId));
-            message.setValue(message.getValue().replace("<contactNumber>", contactNumber));
         }
         return message;
     }
