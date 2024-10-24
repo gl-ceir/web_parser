@@ -28,11 +28,10 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class MOIService {
     private Logger logger = LogManager.getLogger(this.getClass());
-    private final LostDeviceDetailRepository lostDeviceDetailRepository;
+    private final StolenDeviceDetailRepository stolenDeviceDetailRepository;
     private final SearchImeiByPoliceMgmtRepository searchImeiByPoliceMgmtRepository;
-    private final LostDeviceMgmtRepository lostDeviceMgmtRepository;
+    private final StolenDeviceMgmtRepository stolenDeviceMgmtRepository;
     private final MDRRepository mdrRepository;
-    private final SearchImeiDetailByPoliceRepository searchImeiDetailByPoliceRepository;
     private final BlackListRepository blackListRepository;
     private final BlackListHisRepository blackListHisRepository;
     private final GreyListRepository greyListRepository;
@@ -67,14 +66,14 @@ public class MOIService {
 
     public Optional<String> imeiListOfLostDevice(List<String> imeiList) {
         return imeiList.stream().filter(x -> {
-            Boolean isExist = lostDeviceDetailRepository.existsByImeiAndStatusIgnoreCaseAndRequestTypeIgnoreCaseIn(x, "Done", List.of("LOST", "STOLEN"));
-            logger.info("is {} exist in lost_device_detail {}", x, isExist);
+            Boolean isExist = stolenDeviceDetailRepository.existsByImeiAndStatusIgnoreCaseAndRequestTypeIgnoreCaseIn(x, "Done", List.of("LOST", "STOLEN"));
+            logger.info("is {} exist in stolen_device_detail {}", x, isExist);
             return isExist;
         }).findFirst();
     }
 
-    public Optional<LostDeviceDetail> findByImeiAndStatusIgnoreCaseAndRequestTypeIgnoreCaseIn(String imei) {
-        Optional<LostDeviceDetail> result = lostDeviceDetailRepository.findByImeiAndStatusIgnoreCaseAndRequestTypeIgnoreCaseIn(imei, "Done", List.of("LOST", "STOLEN"));
+    public Optional<StolenDeviceDetail> findByImeiAndStatusIgnoreCaseAndRequestTypeIgnoreCaseIn(String imei) {
+        Optional<StolenDeviceDetail> result = stolenDeviceDetailRepository.findByImeiAndStatusIgnoreCaseAndRequestTypeIgnoreCaseIn(imei, "Done", List.of("LOST", "STOLEN"));
         logger.info("findByImeiAndStatusIgnoreCaseAndRequestTypeIgnoreCaseIn response {}", result);
         return result;
     }
@@ -95,63 +94,13 @@ public class MOIService {
         searchImeiByPoliceMgmtRepository.updateCountFoundInLost(status, count, transactionId, null);
     }
 
-/*
-    public void updateCountFoundInLost(int count, String transactionId) {
-        logger.info("updated SearchImeiByPoliceMgmt with count {} and txnId {}", count, transactionId);
-        searchImeiByPoliceMgmtRepository.updateFailCount(count, transactionId);
-    }*/
-
     public Optional<String> findByImei(String imei) {
-        Optional<String> byImei = lostDeviceDetailRepository.findLostDeviceDetailByImei(imei);
+        Optional<String> byImei = stolenDeviceDetailRepository.findStolenDeviceDetailByImei(imei);
         if (byImei.isEmpty()) {
-            logger.info("No record found for IMEI {} in lost_device_detail", imei);
+            logger.info("No record found for IMEI {} in stolen_device_detail", imei);
         }
         return byImei;
     }
-
-    public IMEISeriesModel getIMEI(LostDeviceMgmt lostDeviceMgmt) {
-        String imei1 = lostDeviceMgmt.getImei1();
-        String imei2 = lostDeviceMgmt.getImei2();
-        String imei3 = lostDeviceMgmt.getImei3();
-        String imei4 = lostDeviceMgmt.getImei4();
-        IMEISeriesModel imeiSeriesModel = new IMEISeriesModel();
-        imeiSeriesModel.setImei1(imei1);
-        imeiSeriesModel.setImei2(imei2);
-        imeiSeriesModel.setImei3(imei3);
-        imeiSeriesModel.setImei4(imei4);
-        return imeiSeriesModel;
-    }
-
-/*    public boolean copyLostDeviceMgmtToSearchIMEIDetailByPolice(String requestId, String transactionId, String mode) {
-        Optional<LostDeviceMgmt> byRequestId = lostDeviceMgmtRepository.findByRequestId(requestId);
-        logger.info("LostDeviceMgmt response {}", byRequestId);
-        if (byRequestId.isPresent()) {
-            LostDeviceMgmt lostDeviceMgmt = byRequestId.get();
-            String deviceLostDateTime = lostDeviceMgmt.getDeviceLostDateTime();
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-            LocalDateTime lostDateTime = LocalDateTime.parse(deviceLostDateTime, formatter);
-            if (requestIdMap.get(requestId) == null) {
-                requestIdMap.put(requestId, lostDeviceMgmt.getRequestId());
-                IMEISeriesModel imeiSeriesModel = getIMEI(lostDeviceMgmt);
-                List<SearchImeiDetailByPolice> searchImeiDetailByPoliceList = new ArrayList<>();
-                List<String> imeiList = this.imeiSeries.apply(imeiSeriesModel);
-                if (!imeiList.isEmpty()) imeiList.forEach(imei -> {
-                    SearchImeiDetailByPolice searchImeiDetailByPolice = SearchImeiDetailByPolice.builder().imei(imei).lostDateTime(lostDateTime).createdBy(lostDeviceMgmt.getCreatedBy()).transactionId(requestId).requestId(lostDeviceMgmt.getRequestId()).deviceOwnerName(lostDeviceMgmt.getDeviceOwnerName()).deviceOwnerAddress(lostDeviceMgmt.getDeviceOwnerAddress()).contactNumber(lostDeviceMgmt.getContactNumber()).deviceOwnerNationalId(lostDeviceMgmt.getDeviceOwnerNationalID()).deviceLostPoliceStation(lostDeviceMgmt.getPoliceStation()).requestMode(lostDeviceMgmt.getRequestMode()).build();
-                    searchImeiDetailByPoliceList.add(searchImeiDetailByPolice);
-                });
-                try {
-                    logger.info("SearchImeiDetailByPolice payload for mode {} {}", mode, searchImeiDetailByPoliceList);
-                    List<SearchImeiDetailByPolice> searchImeiDetailByPolices = searchImeiDetailByPoliceRepository.saveAll(searchImeiDetailByPoliceList);
-                    logger.info("Record saved in search_imei_detail_by_police");
-                    return searchImeiDetailByPolices.isEmpty();
-                } catch (Exception exception) {
-                    logger.info("exception occured {}", exception.getMessage());
-                    return false;
-                }
-            }
-        }
-        return false;
-    }*/
 
     public boolean isMultipleIMEIExist(IMEISeriesModel imeiSeriesModel) {
         long count = Stream.of(imeiSeriesModel).flatMap(x -> Stream.of(x.getImei2(), x.getImei3(), x.getImei4())).filter(Objects::isNull).count();
@@ -210,8 +159,6 @@ public class MOIService {
     public LocalDateTime expiryDate(int daysToAdd) {
         LocalDateTime currentDateTime = LocalDateTime.now();
         LocalDateTime expiryDate = currentDateTime.plusDays(daysToAdd);
-/*        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
         return expiryDate;
     }
 
@@ -243,24 +190,6 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
                 if (savedEntity != null) {
                     imeiPairDetailRepository.deleteById(Math.toIntExact(list.getId()));
                 }
-
-/*                if (mode.equalsIgnoreCase("SINGLE")) {
-                    LostDeviceDetail lostDeviceDetail = LostDeviceDetail.builder().imei(list.getImei()).contactNumber(list.getMsisdn()).requestId(list.getTxnId()).status("DONE").requestType("LOST/STOLEN").build();
-                    logger.info("lostDeviceDetail {}", lostDeviceDetail);
-                    LostDeviceDetail save = save(lostDeviceDetail, lostDeviceDetailRepository::save);
-                    if (save != null) {
-                        logger.info("Record inserted for imei {} in lost_device_detail", list.getImei());
-                    } else {
-                        logger.info("Failed to insert record for imei {} in lost_device_detail", list.getImei());
-                    }
-                }
-                if (mode.equalsIgnoreCase("BULK")) {
-                    if (lostDeviceDetailRepository.updateStatus("Done", list.getImei()) > 0) {
-                        logger.info("Record updated for imei {} in lost_device_detail", list.getImei());
-                    } else {
-                        logger.info("Failed to update record for imei {} in lost_device_detail", list.getImei());
-                    }
-                }*/
             });
         }, () -> logger.info("No result found for created_on {}", createdOn));
     }
@@ -274,7 +203,7 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
     }
 
 
-    public void greyListDurationIsZero(String imei, String mode, LostDeviceMgmt lostDeviceMgmt) {
+    public void greyListDurationIsZero(String imei, String mode, StolenDeviceMgmt lostDeviceMgmt) {
         findBlackListByImei(imei).ifPresentOrElse(blackList -> {
             String source = remove(blackList.getSource());
             if (Objects.isNull(source)) updateSource("MOI", imei, "BLACK_LIST");
@@ -294,31 +223,25 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
             save(blackList, blackListRepository::save);
             BlackListHis blackListHis = new BlackListHis();
             BeanUtils.copyProperties(blackList, blackListHis);
-            blackListHis.setAction("Add");
+            blackListHis.setOperation(0);
             save(blackListHis, blackListHisRepository::save);
         });
     }
 
-    public void greyListDurationGreaterThanZero(int greyListDuration, String imei, String mode, LostDeviceMgmt lostDeviceMgmt) {
-        GreyList greyList = GreyList.builder().imei(imei).msisdn(lostDeviceMgmt.getContactNumber()).modeType(mode).source("MOI").expiryDate(expiryDate(greyListDuration)).requestType("Stolen").remarks(lostDeviceMgmt.getRemark()).txnId(lostDeviceMgmt.getRequestId()).tac(getTacFromIMEI(imei)).actualImei(getActualIMEI(imei)).build();
+    public void greyListDurationGreaterThanZero(int greyListDuration, String imei, String mode, StolenDeviceMgmt stolenDeviceMgmt) {
+        GreyList greyList = GreyList.builder().imei(imei).msisdn(stolenDeviceMgmt.getContactNumber()).modeType(mode).source("MOI").expiryDate(expiryDate(greyListDuration)).requestType("Stolen").remarks(stolenDeviceMgmt.getRemark()).txnId(stolenDeviceMgmt.getRequestId()).tac(getTacFromIMEI(imei)).actualImei(getActualIMEI(imei)).build();
         save(greyList, greyListRepository::save);
         GreyListHis greyListHis = new GreyListHis();
         BeanUtils.copyProperties(greyList, greyListHis);
-        greyListHis.setAction("Add");
+        greyListHis.setOperation(0);
         save(greyListHis, greyListHisRepository::save);
     }
 
-    public Optional<LostDeviceMgmt> findByRequestId(String id) {
-        Optional<LostDeviceMgmt> response = lostDeviceMgmtRepository.findByRequestId(id);
+    public Optional<StolenDeviceMgmt> findByRequestId(String id) {
+        Optional<StolenDeviceMgmt> response = stolenDeviceMgmtRepository.findByRequestId(id);
         logger.info("LostDeviceMgmt response : {} based on txn ID :{}", response, id);
         return response;
     }
-
-  /*  public Optional<LostDeviceMgmt> findByLostId(String id) {
-        Optional<LostDeviceMgmt> response = lostDeviceMgmtRepository.findByLostId(id);
-        logger.info("LostDeviceMgmt response for recovery: {} based on txn ID :{}", response, id);
-        return response;
-    }*/
 
     public Optional<BlackList> findBlackListByImei(String imei) {
         Optional<BlackList> result = Optional.ofNullable(blackListRepository.findBlackListByImei(imei));
@@ -337,8 +260,8 @@ String formattedExpiryDate = expiryDate.format(dateTimeFormatter);*/
     }
 
     public void updateStatusInLostDeviceMgmt(String status, String requestId) {
-        logger.info("updated lost_device_mgmt with status {} and requestId {}", status, requestId);
-        lostDeviceMgmtRepository.updateStatus(status, requestId);
+        logger.info("updated stolen_device_mgmt with status {} and requestId {}", status, requestId);
+        stolenDeviceMgmtRepository.updateStatus(status, requestId);
     }
 
     public Function<IMEISeriesModel, List<String>> imeiSeries = (imeiSeries) -> {

@@ -2,7 +2,7 @@ package com.glocks.web_parser.service.parser.moi.loststolen;
 
 import com.glocks.web_parser.alert.AlertService;
 import com.glocks.web_parser.config.AppConfig;
-import com.glocks.web_parser.model.app.LostDeviceMgmt;
+import com.glocks.web_parser.model.app.StolenDeviceMgmt;
 import com.glocks.web_parser.model.app.WebActionDb;
 import com.glocks.web_parser.repository.app.WebActionDbRepository;
 import com.glocks.web_parser.service.fileOperations.FileOperations;
@@ -16,10 +16,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 @Service
-public class MOILostStolenBulkRequest implements RequestTypeHandler<LostDeviceMgmt> {
+public class MOILostStolenBulkRequest implements RequestTypeHandler<StolenDeviceMgmt> {
     private final Logger logger = LogManager.getLogger(this.getClass());
     private final WebActionDbRepository webActionDbRepository;
     private final MOIService moiService;
@@ -41,21 +40,21 @@ public class MOILostStolenBulkRequest implements RequestTypeHandler<LostDeviceMg
     }
 
     @Override
-    public void executeInitProcess(WebActionDb webActionDb, LostDeviceMgmt lostDeviceMgmt) {
-        executeValidateProcess(webActionDb, lostDeviceMgmt);
+    public void executeInitProcess(WebActionDb webActionDb, StolenDeviceMgmt stolenDeviceMgmt) {
+        executeValidateProcess(webActionDb, stolenDeviceMgmt);
     }
 
 
     @Override
-    public void executeValidateProcess(WebActionDb webActionDb, LostDeviceMgmt lostDeviceMgmt) {
-        String uploadedFileName = lostDeviceMgmt.getFileName();
-        String transactionId = lostDeviceMgmt.getRequestId();
+    public void executeValidateProcess(WebActionDb webActionDb, StolenDeviceMgmt stolenDeviceMgmt) {
+        String uploadedFileName = stolenDeviceMgmt.getFileName();
+        String transactionId = stolenDeviceMgmt.getRequestId();
         String moiFilePath = appConfig.getMoiFilePath();
         String uploadedFilePath = moiFilePath + "/" + transactionId + "/" + uploadedFileName;
         logger.info("Uploaded file path is {}", uploadedFilePath);
         if (!fileOperations.checkFileExists(uploadedFilePath)) {
             logger.error("Uploaded file does not exists in path {} for lost ID {}", uploadedFilePath, transactionId);
-            alertService.raiseAnAlert(transactionId, ConfigurableParameter.ALERT_LOST_STOLEN.getValue(), webActionDb.getSubFeature(), transactionId, 0);
+            alertService.raiseAnAlert(transactionId, ConfigurableParameter.FILE_MISSING_ALERT.getValue(), webActionDb.getSubFeature(), transactionId, 0);
             return;
         }
         if (!moiService.areHeadersValid(uploadedFilePath, "STOLEN", 9)) {
@@ -75,22 +74,19 @@ public class MOILostStolenBulkRequest implements RequestTypeHandler<LostDeviceMg
             map.put("transactionId", transactionId);
             map.put("uploadedFilePath", uploadedFilePath);
             map.put("moiFilePath", moiFilePath);
-            executeProcess(webActionDb, lostDeviceMgmt);
+            executeProcess(webActionDb, stolenDeviceMgmt);
         }
     }
 
     @Override
-    public void executeProcess(WebActionDb webActionDb, LostDeviceMgmt lostDeviceMgmt) {
-/*        logger.info("--------VERIFICATION PROCESS STARTED-------");
-        logger.info("-------------------------------------------");
-        pendingVerificationRequest.executeInitProcess(webActionDb, lostDeviceMgmt);*/
+    public void executeProcess(WebActionDb webActionDb, StolenDeviceMgmt stolenDeviceMgmt) {
         logger.info("----STOLEN BULK PROCESS STARTED----");
         logger.info("-----------------------------------");
         String transactionId = map.get("transactionId");
         String processedFilePath = map.get("moiFilePath") + "/" + transactionId + "/" + transactionId + ".csv";
         logger.info("Processed file path is {}", processedFilePath);
-        moiLostStolenService.fileProcess(webActionDb, lostDeviceMgmt, map.get("uploadedFileName"), map.get("uploadedFilePath"), Integer.parseInt(moiService.greyListDuration()));
-        moiService.updateStatusInLostDeviceMgmt("Done", lostDeviceMgmt.getRequestId());
+        moiLostStolenService.fileProcess(webActionDb, stolenDeviceMgmt, map.get("uploadedFileName"), map.get("uploadedFilePath"), Integer.parseInt(moiService.greyListDuration()));
+        moiService.updateStatusInLostDeviceMgmt("Done", stolenDeviceMgmt.getRequestId());
         webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
     }
 }

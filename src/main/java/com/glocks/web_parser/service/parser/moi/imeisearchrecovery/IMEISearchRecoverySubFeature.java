@@ -30,16 +30,4 @@ public class IMEISearchRecoverySubFeature {
         logger.info("executed {} operation", requestType);
         return requestTypeSelection;
     }
-
-/*
-public void delegateValidateRequest(WebActionDb webActionDb, SearchImeiByPoliceMgmt searchImeiByPoliceMgmt) {
-RequestTypeHandler requestTypeAction = checkType(searchImeiByPoliceMgmt);
-requestTypeAction.executeValidateProcess(webActionDb, searchImeiByPoliceMgmt);
-}
-
-public void delegateExecuteProcess(WebActionDb webActionDb, SearchImeiByPoliceMgmt searchImeiByPoliceMgmt) {
-RequestTypeHandler requestTypeAction = checkType(searchImeiByPoliceMgmt);
-requestTypeAction.executeProcess(webActionDb, searchImeiByPoliceMgmt);
-}
-*/
 }

@@ -1,6 +1,6 @@
 package com.glocks.web_parser.service.parser.moi.utility;
 
-import com.glocks.web_parser.model.app.LostDeviceMgmt;
+import com.glocks.web_parser.model.app.StolenDeviceMgmt;
 import com.glocks.web_parser.model.app.SearchImeiByPoliceMgmt;
 import com.glocks.web_parser.model.app.WebActionDb;
 import com.glocks.web_parser.service.parser.moi.imeisearchrecovery.IMEISearchRecoverySubFeature;
@@ -32,11 +32,11 @@ public class MOIFeatureExist {
         Map<String, BiConsumer<WebActionDb, Object>> map = new HashMap<>();
         if (Objects.nonNull(columnName) && !columnName.isEmpty()) {
             map.put("IMEI_SEARCH_RECOVERY", (x, y) -> imeiSearchRecoverySubFeature.delegateInitRequest(x, (SearchImeiByPoliceMgmt) y));
-            map.put("RECOVER", (x, y) -> moiRecoverSubFeature.delegateInitRequest(x, (LostDeviceMgmt) y));
-            map.put("LOST/STOLEN", (x, y) -> moiLostStolenSubFeature.delegateInitRequest(x, (LostDeviceMgmt) y));
-            map.put("LOST", (x, y) -> moiLostStolenSubFeature.delegateInitRequest(x, (LostDeviceMgmt) y));
-            map.put("STOLEN", (x, y) -> moiLostStolenSubFeature.delegateInitRequest(x, (LostDeviceMgmt) y));
-            map.put("PENDING_VERIFICATION", (x, y) -> pendingVerificationFeature.delegateInitRequest(x, (LostDeviceMgmt) y));
+            map.put("RECOVER", (x, y) -> moiRecoverSubFeature.delegateInitRequest(x, (StolenDeviceMgmt) y));
+            map.put("LOST/STOLEN", (x, y) -> moiLostStolenSubFeature.delegateInitRequest(x, (StolenDeviceMgmt) y));
+            map.put("LOST", (x, y) -> moiLostStolenSubFeature.delegateInitRequest(x, (StolenDeviceMgmt) y));
+            map.put("STOLEN", (x, y) -> moiLostStolenSubFeature.delegateInitRequest(x, (StolenDeviceMgmt) y));
+            map.put("PENDING_VERIFICATION", (x, y) -> pendingVerificationFeature.delegateInitRequest(x, (StolenDeviceMgmt) y));
         }
         return map.get(columnName);
     }

@@ -71,6 +71,4 @@ public class BlackListHis {
     @Column(name = "source")
     String source;
 
-    @Column(name = "action")
-    String action;
 }

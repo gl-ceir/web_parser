@@ -1,6 +1,6 @@
 package com.glocks.web_parser.service.parser.moi.loststolen;
 
-import com.glocks.web_parser.model.app.LostDeviceMgmt;
+import com.glocks.web_parser.model.app.StolenDeviceMgmt;
 import com.glocks.web_parser.model.app.WebActionDb;
 import com.glocks.web_parser.service.parser.moi.utility.ConfigurableParameter;
 import com.glocks.web_parser.service.parser.moi.utility.RequestTypeHandler;
@@ -16,16 +16,16 @@ public class MOILostStolenSubFeature {
     private final MOILostStolenSingleRequest moiLostStolenSingleRequest;
     private final MOILostStolenBulkRequest moiLostStolenBulkRequest;
 
-    public void delegateInitRequest(WebActionDb webActionDb, LostDeviceMgmt lostDeviceMgmt) {
-        RequestTypeHandler requestTypeHandler = checkType(lostDeviceMgmt);
+    public void delegateInitRequest(WebActionDb webActionDb, StolenDeviceMgmt stolenDeviceMgmt) {
+        RequestTypeHandler requestTypeHandler = checkType(stolenDeviceMgmt);
         if (requestTypeHandler != null) {
-            logger.info("executed {} operation", lostDeviceMgmt.getRequestMode());
-            requestTypeHandler.executeInitProcess(webActionDb, lostDeviceMgmt);
+            logger.info("executed {} operation", stolenDeviceMgmt.getRequestMode());
+            requestTypeHandler.executeInitProcess(webActionDb, stolenDeviceMgmt);
         } else logger.info("Invalid request mode");
     }
 
-    public RequestTypeHandler checkType(LostDeviceMgmt lostDeviceMgmt) {
-        String requestType = lostDeviceMgmt.getRequestMode();
+    public RequestTypeHandler checkType(StolenDeviceMgmt stolenDeviceMgmt) {
+        String requestType = stolenDeviceMgmt.getRequestMode();
         return requestType.equalsIgnoreCase(ConfigurableParameter.SINGLE.getValue()) ? moiLostStolenSingleRequest : requestType.equalsIgnoreCase(ConfigurableParameter.BULK.getValue()) ? moiLostStolenBulkRequest : null;
     }
 }

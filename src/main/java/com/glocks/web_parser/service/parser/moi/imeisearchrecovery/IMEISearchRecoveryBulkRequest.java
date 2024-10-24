@@ -21,7 +21,6 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor
@@ -50,7 +49,7 @@ public class IMEISearchRecoveryBulkRequest implements RequestTypeHandler<SearchI
         logger.info("Uploaded file path is {}", uploadedFilePath);
         if (!fileOperations.checkFileExists(uploadedFilePath)) {
             logger.error("Uploaded file does not exists in path {} for transactionId {}", uploadedFilePath, transactionId);
-            alertService.raiseAnAlert(transactionId, ConfigurableParameter.ALERT_IMEI_SEARCH_RECOVERY.getValue(), webActionDb.getSubFeature(), transactionId, 0);
+            alertService.raiseAnAlert(transactionId, ConfigurableParameter.FILE_MISSING_ALERT.getValue(), webActionDb.getSubFeature(), transactionId, 0);
             return;
         }
         if (!moiService.areHeadersValid(uploadedFilePath, "DEFAULT", 4)) {

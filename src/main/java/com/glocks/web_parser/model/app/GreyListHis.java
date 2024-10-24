@@ -65,6 +65,4 @@ public class GreyListHis {
     @Column(name = "source")
     String source;
 
-    @Column(name = "action")
-    String action;
 }

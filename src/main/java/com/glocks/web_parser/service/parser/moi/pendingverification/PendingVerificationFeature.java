@@ -1,6 +1,6 @@
 package com.glocks.web_parser.service.parser.moi.pendingverification;
 
-import com.glocks.web_parser.model.app.LostDeviceMgmt;
+import com.glocks.web_parser.model.app.StolenDeviceMgmt;
 import com.glocks.web_parser.model.app.WebActionDb;
 import com.glocks.web_parser.service.parser.moi.utility.RequestTypeHandler;
 import lombok.RequiredArgsConstructor;
@@ -14,13 +14,13 @@ public class PendingVerificationFeature {
     private final Logger logger = LogManager.getLogger(this.getClass());
     private final PendingVerificationRequest pendingVerificationRequest;
 
-    public void delegateInitRequest(WebActionDb webActionDb, LostDeviceMgmt lostDeviceMgmt) {
-        RequestTypeHandler requestTypeHandler = checkType(lostDeviceMgmt);
-        requestTypeHandler.executeInitProcess(webActionDb, lostDeviceMgmt);
+    public void delegateInitRequest(WebActionDb webActionDb, StolenDeviceMgmt stolenDeviceMgmt) {
+        RequestTypeHandler requestTypeHandler = checkType(stolenDeviceMgmt);
+        requestTypeHandler.executeInitProcess(webActionDb, stolenDeviceMgmt);
 
     }
 
-    public RequestTypeHandler checkType(LostDeviceMgmt lostDeviceMgmt) {
+    public RequestTypeHandler checkType(StolenDeviceMgmt stolenDeviceMgmt) {
         RequestTypeHandler requestTypeSelection = pendingVerificationRequest;
         return requestTypeSelection;
     }

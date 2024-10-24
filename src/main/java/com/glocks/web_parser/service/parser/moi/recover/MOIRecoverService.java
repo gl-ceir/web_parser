@@ -3,8 +3,8 @@ package com.glocks.web_parser.service.parser.moi.recover;
 import com.glocks.web_parser.config.AppConfig;
 import com.glocks.web_parser.model.app.BlackListHis;
 import com.glocks.web_parser.model.app.GreyListHis;
-import com.glocks.web_parser.model.app.LostDeviceDetailHis;
-import com.glocks.web_parser.model.app.LostDeviceMgmt;
+import com.glocks.web_parser.model.app.StolenDeviceDetailHis;
+import com.glocks.web_parser.model.app.StolenDeviceMgmt;
 import com.glocks.web_parser.repository.app.*;
 import com.glocks.web_parser.service.parser.moi.utility.IMEISeriesModel;
 import com.glocks.web_parser.service.parser.moi.utility.MOIService;
@@ -22,17 +22,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MOIRecoverService {
     private Logger logger = LogManager.getLogger(this.getClass());
-    private final LostDeviceDetailRepository lostDeviceDetailRepository;
-    private final LostDeviceDetailHisRepository lostDeviceDetailHisRepository;
+    private final StolenDeviceDetailRepository stolenDeviceDetailRepository;
+    private final StolenDeviceDetailHisRepository stolenDeviceDetailHisRepository;
     private final AppConfig appConfig;
     private final BlackListRepository blackListRepository;
     private final BlackListHisRepository blackListHisRepository;
     private final GreyListRepository greyListRepository;
     private final GreyListHisRepository greyListHisRepository;
     private final MOIService moiService;
-    private final WebActionDbRepository webActionDbRepository;
 
-    public boolean fileProcessing(String filePath, LostDeviceMgmt lostDeviceMgmt) {
+    public boolean fileProcessing(String filePath, StolenDeviceMgmt stolenDeviceMgmt) {
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String record;
             IMEISeriesModel imeiSeriesModel = new IMEISeriesModel();
@@ -47,7 +46,7 @@ public class MOIRecoverService {
                         imeiSeriesModel.setImeiSeries(split, "DEFAULT");
                         logger.info("IMEISeriesModel : {}", imeiSeriesModel);
                         List<String> imeiList = moiService.imeiSeries.apply(imeiSeriesModel);
-                        if (!imeiList.isEmpty()) actionAtRecord(lostDeviceMgmt, imeiList, "Bulk");
+                        if (!imeiList.isEmpty()) actionAtRecord(stolenDeviceMgmt, imeiList, "Bulk");
                     }
                 }
             }
@@ -70,6 +69,7 @@ public class MOIRecoverService {
                     BeanUtils.copyProperties(response, blackListHis);
                     blackListHis.setRequestType(requestType);
                     blackListHis.setTxnId(requestID);
+                    blackListHis.setOperation(1);
                     logger.info("BlackListHis : {}", blackListHis);
                     BlackListHis save = moiService.save(blackListHis, blackListHisRepository::save);
                     logger.info("black_list id {}", response.getId());
@@ -99,6 +99,7 @@ public class MOIRecoverService {
                         BeanUtils.copyProperties(response, greyListHis);
                         greyListHis.setRequestType(requestType);
                         greyListHis.setTxnId(requestID);
+                        greyListHis.setOperation(1);
                         logger.info("GreyListHis {}", greyListHis);
                         GreyListHis save = moiService.save(greyListHis, greyListHisRepository::save);
                         logger.info("grey_list id {}", response.getId());
@@ -117,27 +118,27 @@ public class MOIRecoverService {
         });
     }
 
-    public void lostDeviceDetailFlow(String imei, LostDeviceMgmt lostDeviceMgmt) {
-        LostDeviceDetailHis lostDeviceDetailHis = LostDeviceDetailHis.builder()
-                .imei(imei).contactNumber(lostDeviceMgmt.getContactNumber())
-                .deviceBrand(lostDeviceMgmt.getDeviceBrand())
-                .deviceModel(lostDeviceMgmt.getDeviceModel()).requestId(lostDeviceMgmt.getLostId())
+    public void lostDeviceDetailFlow(String imei, StolenDeviceMgmt stolenDeviceMgmt) {
+        StolenDeviceDetailHis stolenDeviceDetailHis = StolenDeviceDetailHis.builder()
+                .imei(imei).contactNumber(stolenDeviceMgmt.getContactNumber())
+                .deviceBrand(stolenDeviceMgmt.getDeviceBrand())
+                .deviceModel(stolenDeviceMgmt.getDeviceModel()).requestId(stolenDeviceMgmt.getLostId())
                 .status("Add").requestType("Recover").build();
-        LostDeviceDetailHis save = moiService.save(lostDeviceDetailHis, lostDeviceDetailHisRepository::save);
+        StolenDeviceDetailHis save = moiService.save(stolenDeviceDetailHis, stolenDeviceDetailHisRepository::save);
         if (save != null) {
-            int i = lostDeviceDetailRepository.deleteByImeiAndRequestTypeIgnoreCaseIn(imei, List.of("STOLEN", "LOST"));
-            if (i > 0) logger.info("record delete for IMEI {} from lost_device_detail", imei);
+            int i = stolenDeviceDetailRepository.deleteByImeiAndRequestTypeIgnoreCaseIn(imei, List.of("STOLEN", "LOST"));
+            if (i > 0) logger.info("record delete for IMEI {} from stolen_device_detail", imei);
             else logger.info("No record found for delete operation against IMEI {}", imei);
         }
     }
 
-    public void actionAtRecord(LostDeviceMgmt lostDeviceMgmt, List<String> imeiList, String mode) {
+    public void actionAtRecord(StolenDeviceMgmt stolenDeviceMgmt, List<String> imeiList, String mode) {
         try {
             for (String imei : imeiList) {
                 if (moiService.isNumericAndValid.test(imei)) {
-                    this.blackListFlow(imei, lostDeviceMgmt.getRequestId(), mode, lostDeviceMgmt.getRequestType());
-                    this.greyListFlow(imei, lostDeviceMgmt.getRequestId(), mode, lostDeviceMgmt.getRequestType());
-                    this.lostDeviceDetailFlow(imei, lostDeviceMgmt);
+                    this.blackListFlow(imei, stolenDeviceMgmt.getRequestId(), mode, stolenDeviceMgmt.getRequestType());
+                    this.greyListFlow(imei, stolenDeviceMgmt.getRequestId(), mode, stolenDeviceMgmt.getRequestType());
+                    this.lostDeviceDetailFlow(imei, stolenDeviceMgmt);
                 }
             }
         } catch (Exception e) {

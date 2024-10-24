@@ -1,7 +1,8 @@
 package com.glocks.web_parser.model.app;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Builder;
+import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -9,16 +10,11 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "lost_device_detail")
-@Setter
-@Getter
-@ToString
+@Table(name = "stolen_device_detail_his")
+@Data
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
-@EqualsAndHashCode
-public class LostDeviceDetail implements Serializable {
-    private static final long serialVersionUID = -9193873433253773828L;
+public class StolenDeviceDetailHis implements Serializable {
+    private static final long serialVersionUID = -8978714783467931014L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -54,15 +50,6 @@ public class LostDeviceDetail implements Serializable {
 
     @Column(name = "lost_stolen_request_id")
     private String lostStolenRequestId;
-
-
-    @PrePersist
-    public void setDefaultValues() {
-        if (this.contactNumber == null || this.contactNumber.isEmpty()) {
-            this.contactNumber = "0000-1111";
-        }
-    }
-
 
 }
 

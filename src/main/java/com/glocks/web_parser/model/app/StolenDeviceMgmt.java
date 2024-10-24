@@ -11,9 +11,9 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity
-@Table(name = "lost_device_mgmt")
+@Table(name = "stolen_device_mgmt")
 @Data
-public class LostDeviceMgmt implements Serializable {
+public class StolenDeviceMgmt implements Serializable {
     private static final long serialVersionUID = -9193873433253773828L;
 
     @Id

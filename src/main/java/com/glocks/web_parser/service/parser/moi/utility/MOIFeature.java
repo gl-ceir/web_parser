@@ -20,7 +20,6 @@ public class MOIFeature implements FeatureInterface {
     private final Logger logger = LogManager.getLogger(this.getClass());
     private final WebActionDbRepository webActionDbRepository;
     private final MOIService moiService;
-    private final SearchImeiByPoliceMgmtRepository searchImeiByPoliceMgmtRepository;
 
     public void action(WebActionDb wb, String subFeature) {
         String txnId = wb.getTxnId();
@@ -32,7 +31,6 @@ public class MOIFeature implements FeatureInterface {
                 case "IMEI_SEARCH_RECOVERY" -> optional = moiService.findByTxnId(txnId);
                 case "STOLEN", "LOST", "LOST/STOLEN", "PENDING_VERIFICATION" ->
                         optional = moiService.findByRequestId(txnId);
-                // case "RECOVER" -> optional = moiService.findByLostId(txnId);
                 case "RECOVER" -> optional = moiService.findByRequestId(txnId);
             }
             optional.ifPresentOrElse(result -> {
