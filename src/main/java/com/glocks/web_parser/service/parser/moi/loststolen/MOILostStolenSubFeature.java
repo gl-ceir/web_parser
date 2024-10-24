@@ -19,7 +19,7 @@ public class MOILostStolenSubFeature {
     public void delegateInitRequest(WebActionDb webActionDb, StolenDeviceMgmt stolenDeviceMgmt) {
         RequestTypeHandler requestTypeHandler = checkType(stolenDeviceMgmt);
         if (requestTypeHandler != null) {
-            logger.info("executed {} operation", stolenDeviceMgmt.getRequestMode());
+            logger.info("Executed -- {} -- operation", stolenDeviceMgmt.getRequestMode());
             requestTypeHandler.executeInitProcess(webActionDb, stolenDeviceMgmt);
         } else logger.info("Invalid request mode");
     }

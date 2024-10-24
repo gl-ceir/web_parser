@@ -79,17 +79,17 @@ public class IMEISearchRecoveryService {
                     Optional<StolenDeviceDetail> lostDeviceDetailOptional = moiService.findByImeiAndStatusIgnoreCaseAndRequestTypeIgnoreCaseIn(imei);
                     if (lostDeviceDetailOptional.isPresent()) {
                         StolenDeviceDetail lostDeviceDetail = lostDeviceDetailOptional.get();
-                        logger.info("LostDeviceDetail response based {} on IMEI  {}", imei, lostDeviceDetail);
+                        logger.info("StolenDeviceDetail response based {} on IMEI  {}", imei, lostDeviceDetail);
                         String requestId = lostDeviceDetail.getRequestId();
                         Optional<StolenDeviceMgmt> byRequestId = stolenDeviceMgmtRepository.findByRequestId(requestId);
                         if (byRequestId.isPresent()) {
                             ++successCountInIMEISearchRecoveryService;
                             StolenDeviceMgmt lostDeviceMgmt = byRequestId.get();
-                            logger.info("lostDeviceMgmt response {}", lostDeviceMgmt);
+                            logger.info("StolenDeviceMgmt response {}", lostDeviceMgmt);
                             isCopiedRecordLostDeviceMgmtToSearchIMEIDetailByPolice(lostDeviceMgmt, requestId, mode, split, printWriter, transactionId, imei, imeiList);
                         }
                     } else {
-                        logger.info("No record found in stolen_device_detail for IMEI {}", imei);
+                        logger.info("No record found for IMEI {} in StolenDeviceDetail", imei);
                         if (mode.equalsIgnoreCase("BULK")) {
                             printWriter.println(moiService.joiner(split, ",Not Found"));
                             break;
@@ -112,9 +112,10 @@ public class IMEISearchRecoveryService {
             case "Single" -> {
                 if (count == 0) {
                     moiService.updateReasonAndCountInSearchImeiByPoliceMgmt("Fail", "No IMEI found", transactionId, 0);
+                    logger.info("No IMEI found for Txn ID {}", transactionId);
                 } else if (count > 0) {
                     moiService.updateCountFoundInLost("Done", count, transactionId, null);
-                    logger.info("updated record with count_found_in _lost as {} for Txn ID {}", count, transactionId);
+                    logger.info("Updated record with count_found_in _lost as {} for Txn ID {}", count, transactionId);
                 }
             }
         }

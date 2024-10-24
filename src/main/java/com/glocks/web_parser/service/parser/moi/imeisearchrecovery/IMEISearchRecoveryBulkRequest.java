@@ -62,7 +62,7 @@ public class IMEISearchRecoveryBulkRequest implements RequestTypeHandler<SearchI
         map.put("transactionId", transactionId);
         map.put("uploadedFilePath", uploadedFilePath);
         map.put("moiFilePath", moiFilePath);
-        successCount=0;
+        successCount = 0;
         executeProcess(webActionDb, searchImeiByPoliceMgmt);
 
     }
@@ -94,9 +94,8 @@ public class IMEISearchRecoveryBulkRequest implements RequestTypeHandler<SearchI
                         List<String> imeiList = moiService.imeiSeries.apply(imeiSeriesModel);
                         boolean isImeiValid = false;
                         for (String imei : imeiList) {
-                            isImeiValid = moiService.isNumericAndValid(imei);
+                            isImeiValid = moiService.isNumericAndValid.test(imei);
                         }
-                        //     boolean isImeiValid = Stream.of(split).allMatch(imei -> moiService.isNumericAndValid(imei));
                         if (!isImeiValid) {
                             printWriter.println(moiService.joiner(split, ",Invalid Format"));
                             logger.info("Invalid IMEI format");
@@ -117,11 +116,10 @@ public class IMEISearchRecoveryBulkRequest implements RequestTypeHandler<SearchI
             printWriter.close();
             logger.info("successCount in Bulk Request {}", successCount);
             moiService.updateCountFoundInLost("Done", successCount, transactionId, null);
-            webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
+            moiService.webActionDbOperation(4, webActionDb.getId());
         } catch (Exception ex) {
             moiService.updateStatusAndCountFoundInLost("Fail", 0, transactionId, "Please try after some time");
-            logger.info("updated record with status as Done and count_found_in _lost as {} for Txn ID {}", successCount, transactionId);
-            webActionDbRepository.updateWebActionStatus(5, webActionDb.getId());
+            moiService.webActionDbOperation(5, webActionDb.getId());
             logger.info("Exception in processing the file {}", ex.getMessage());
         }
 

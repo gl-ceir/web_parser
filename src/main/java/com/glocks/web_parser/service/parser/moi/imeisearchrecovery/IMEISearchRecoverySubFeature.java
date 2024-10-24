@@ -27,7 +27,7 @@ public class IMEISearchRecoverySubFeature {
     public RequestTypeHandler checkType(SearchImeiByPoliceMgmt searchImeiByPoliceMgmt) {
         String requestType = searchImeiByPoliceMgmt.getRequestMode();
         RequestTypeHandler requestTypeSelection = requestType.equalsIgnoreCase(ConfigurableParameter.SINGLE.getValue()) ? imeiSearchRecoverySingleRequest : requestType.equalsIgnoreCase(ConfigurableParameter.BULK.getValue()) ? imeiSearchRecoveryBulkRequest : null;
-        logger.info("executed {} operation", requestType);
+        logger.info("Executed -- {} -- operation", requestType);
         return requestTypeSelection;
     }
 }

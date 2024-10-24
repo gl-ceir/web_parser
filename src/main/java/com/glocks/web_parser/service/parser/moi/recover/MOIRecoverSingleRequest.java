@@ -46,8 +46,7 @@ public class MOIRecoverSingleRequest implements RequestTypeHandler<StolenDeviceM
     public void executeProcess(WebActionDb webActionDb, StolenDeviceMgmt stolenDeviceMgmt) {
         moiRecoverService.actionAtRecord(stolenDeviceMgmt, imeiList,"Single");
         moiService.updateStatusInLostDeviceMgmt("Done", stolenDeviceMgmt.getRequestId());
-        webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
-        logger.info("updated state as Done against {}", webActionDb.getTxnId());
+        moiService.webActionDbOperation(4, webActionDb.getId());
 
     }
 }

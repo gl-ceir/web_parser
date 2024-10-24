@@ -70,7 +70,7 @@ public class PendingVerificationRequest implements RequestTypeHandler<StolenDevi
         PrintWriter printWriter = moiService.file(processedFilePath);
         logger.info("----PENDING VERIFICATION PROCESS STARTED---");
         verificationStatus = pendingVerificationService.pendingVerificationFileValidation(map.get("uploadedFilePath"), stolenDeviceMgmt, printWriter, ConfigurableParameter.PENDING_VERIFICATION_STAGE_INIT.getValue());
-        logger.info("verificationStatus {}", verificationStatus);
+        logger.info("PENDING VERIFICATION PROCESS status {}", verificationStatus);
         if (verificationStatus) {
             pendingVerificationService.validFile(webActionDb, map.get("uploadedFilePath"), stolenDeviceMgmt, printWriter, map.get("uploadedFileName"), ConfigurableParameter.PENDING_VERIFICATION_STAGE_DONE.getValue());
         } else {

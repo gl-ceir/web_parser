@@ -31,22 +31,19 @@ public class MOILostStolenService {
     public void fileProcess(WebActionDb webActionDb, StolenDeviceMgmt stolenDeviceMgmt, String uploadedFileName, String uploadedFilePath, int greyListDuration) {
         try (BufferedReader reader = new BufferedReader(new FileReader(uploadedFilePath))) {
             String record;
-            //  String[] header;
             IMEISeriesModel imeiSeriesModel = new IMEISeriesModel();
             String[] split;
             boolean headerSkipped = false;
             while ((record = reader.readLine()) != null) {
                 if (!record.trim().isEmpty()) {
                     if (!headerSkipped) {
-                        // header = record.split(appConfig.getListMgmtFileSeparator(), -1);
                         headerSkipped = true;
                     } else {
                         split = record.split(appConfig.getListMgmtFileSeparator(), -1);
                         imeiSeriesModel.setImeiSeries(split, "STOLEN");
-                        logger.info("IMEISeriesModel {}", imeiSeriesModel);
                         List<String> imeiList = moiService.imeiSeries.apply(imeiSeriesModel);
                         if (!imeiList.isEmpty()) imeiList.forEach(imei -> {
-                            if (!moiService.isNumericAndValid(imei)) {
+                            if (!moiService.isNumericAndValid.test(imei)) {
                                 logger.info("Invalid IMEI found");
                             } else {
                                 this.recordProcess(imei, stolenDeviceMgmt, stolenDeviceMgmt.getDeviceLostDateTime(), "Bulk", greyListDuration);
@@ -80,12 +77,11 @@ public class MOILostStolenService {
     public void lostDeviceDetailAction(String imei, StolenDeviceMgmt stolenDeviceMgmt, String mode) {
         if (mode.equalsIgnoreCase("SINGLE")) {
             StolenDeviceDetail stolenDeviceDetail = StolenDeviceDetail.builder().imei(imei).deviceModel(stolenDeviceMgmt.getDeviceModel()).deviceBrand(stolenDeviceMgmt.getDeviceBrand()).contactNumber(stolenDeviceMgmt.getContactNumber()).requestId(stolenDeviceMgmt.getRequestId()).status("Done").requestType("Stolen").build();
-            logger.info("stolenDeviceDetail {}", stolenDeviceDetail);
             StolenDeviceDetail save = moiService.save(stolenDeviceDetail, stolenDeviceDetailRepository::save);
             if (save != null) {
-                logger.info("Record inserted for imei {} in stolen_device_detail", imei);
+                logger.info("Save operation for imei {} in stolen_device_detail", imei);
             } else {
-                logger.info("Failed to insert record for imei {} in stolen_device_detail", imei);
+                logger.info("Failed to save record for imei {} in stolen_device_detail", imei);
             }
         }
         if (mode.equalsIgnoreCase("BULK")) {

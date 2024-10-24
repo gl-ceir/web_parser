@@ -45,6 +45,6 @@ public class IMEISearchRecoverySingleRequest implements RequestTypeHandler<Searc
     public void executeProcess(WebActionDb webActionDb, SearchImeiByPoliceMgmt searchImeiByPoliceMgmt) {
         String txnId = webActionDb.getTxnId();
         imeiSearchRecoveryService.actionAtRecord(imeiSeriesModel, webActionDb, txnId, null, "Single", null);
-        webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
+        moiService.webActionDbOperation(4, webActionDb.getId());
     }
 }

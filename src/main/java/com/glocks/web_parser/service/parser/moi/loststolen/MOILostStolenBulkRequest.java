@@ -53,7 +53,7 @@ public class MOILostStolenBulkRequest implements RequestTypeHandler<StolenDevice
         String uploadedFilePath = moiFilePath + "/" + transactionId + "/" + uploadedFileName;
         logger.info("Uploaded file path is {}", uploadedFilePath);
         if (!fileOperations.checkFileExists(uploadedFilePath)) {
-            logger.error("Uploaded file does not exists in path {} for lost ID {}", uploadedFilePath, transactionId);
+            logger.error("File is missing in path {} for transaction ID  {}", uploadedFilePath, transactionId);
             alertService.raiseAnAlert(transactionId, ConfigurableParameter.FILE_MISSING_ALERT.getValue(), webActionDb.getSubFeature(), transactionId, 0);
             return;
         }
@@ -80,13 +80,13 @@ public class MOILostStolenBulkRequest implements RequestTypeHandler<StolenDevice
 
     @Override
     public void executeProcess(WebActionDb webActionDb, StolenDeviceMgmt stolenDeviceMgmt) {
-        logger.info("----STOLEN BULK PROCESS STARTED----");
-        logger.info("-----------------------------------");
+        logger.info("--------------------------STOLEN BULK PROCESS STARTED------------------");
+        logger.info("-----------------------------------------------------------------------");
         String transactionId = map.get("transactionId");
         String processedFilePath = map.get("moiFilePath") + "/" + transactionId + "/" + transactionId + ".csv";
         logger.info("Processed file path is {}", processedFilePath);
         moiLostStolenService.fileProcess(webActionDb, stolenDeviceMgmt, map.get("uploadedFileName"), map.get("uploadedFilePath"), Integer.parseInt(moiService.greyListDuration()));
         moiService.updateStatusInLostDeviceMgmt("Done", stolenDeviceMgmt.getRequestId());
-        webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
+        moiService.webActionDbOperation(4, webActionDb.getId());
     }
 }

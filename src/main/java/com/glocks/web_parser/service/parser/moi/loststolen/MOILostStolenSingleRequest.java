@@ -34,6 +34,7 @@ public class MOILostStolenSingleRequest implements RequestTypeHandler<StolenDevi
     public void executeValidateProcess(WebActionDb webActionDb, StolenDeviceMgmt stolenDeviceMgmt) {
         try {
             greyListDuration = Integer.parseInt(moiService.greyListDuration());
+            logger.info("GREY_LIST_DURATION : {} ", greyListDuration);
             executeProcess(webActionDb, stolenDeviceMgmt);
         } catch (NumberFormatException e) {
             logger.info("Invalid GREY_LIST_DURATION value");
@@ -43,23 +44,20 @@ public class MOILostStolenSingleRequest implements RequestTypeHandler<StolenDevi
     @Override
     public void executeProcess(WebActionDb webActionDb, StolenDeviceMgmt stolenDeviceMgmt) {
         String deviceLostDateTime = stolenDeviceMgmt.getDeviceLostDateTime();
-        logger.info("GREY_LIST_DURATION : {}  deviceLostDateTime {} ", greyListDuration, deviceLostDateTime);
+        logger.info("deviceLostDateTime {} ", deviceLostDateTime);
         if (Objects.nonNull(deviceLostDateTime)) {
             IMEISeriesModel imeiSeriesModel = new IMEISeriesModel();
             BeanUtils.copyProperties(stolenDeviceMgmt, imeiSeriesModel);
-            logger.info("IMEISeriesModel {}", imeiSeriesModel);
             List<String> imeiList = moiService.imeiSeries.apply(imeiSeriesModel);
             if (!imeiList.isEmpty()) imeiList.forEach(imei -> {
-                if (!moiService.isNumericAndValid(imei)) {
+                if (!moiService.isNumericAndValid.test(imei)) {
                     logger.info("Invalid IMEI {} found", imei);
                 } else {
                     moiLostStolenService.recordProcess(imei, stolenDeviceMgmt, deviceLostDateTime, "Single", greyListDuration);
                 }
             });
             moiService.updateStatusInLostDeviceMgmt("Done", stolenDeviceMgmt.getRequestId());
-            logger.info("updated status as Done");
-            webActionDbRepository.updateWebActionStatus(4, webActionDb.getId());
-            logger.info("updated state as Done against {}", webActionDb.getTxnId());
+            moiService.webActionDbOperation(4, webActionDb.getId());
         } else {
             logger.info("Invalid deviceLostDateTime value {}", deviceLostDateTime);
         }
